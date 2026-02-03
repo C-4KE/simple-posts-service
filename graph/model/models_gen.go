@@ -2,25 +2,65 @@
 
 package model
 
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
+
+type Comment struct {
+	ID                int                `json:"id"`
+	AuthorID          uuid.UUID          `json:"authorID"`
+	PostID            int                `json:"postID"`
+	ParentID          *int               `json:"parentID,omitempty"`
+	Text              string             `json:"text"`
+	CreateDate        time.Time          `json:"createDate"`
+	RepliesConnection *CommentConnection `json:"repliesConnection"`
+}
+
+type CommentConnection struct {
+	Edges    []*CommentEdge `json:"edges"`
+	PageInfo *PageInfo      `json:"pageInfo"`
+}
+
+type CommentEdge struct {
+	Node   *Comment `json:"node"`
+	Cursor string   `json:"cursor"`
+}
+
+type CommentInput struct {
+	AuthorID uuid.UUID `json:"authorID"`
+	PostID   int       `json:"postID"`
+	ParentID *int      `json:"parentID,omitempty"`
+	Text     string    `json:"text"`
+}
+
 type Mutation struct {
 }
 
-type NewTodo struct {
-	Text   string `json:"text"`
-	UserID string `json:"userId"`
+type PageInfo struct {
+	HasNextPage bool    `json:"hasNextPage"`
+	EndCursor   *string `json:"endCursor,omitempty"`
+}
+
+type Post struct {
+	ID                 int                `json:"id"`
+	AuthorID           uuid.UUID          `json:"authorID"`
+	Title              string             `json:"title"`
+	Text               string             `json:"text"`
+	CommentsEnabled    bool               `json:"commentsEnabled"`
+	CommentsConnection *CommentConnection `json:"commentsConnection"`
+}
+
+type PostInput struct {
+	AuthorID        uuid.UUID `json:"authorID"`
+	Title           string    `json:"title"`
+	Text            string    `json:"text"`
+	CommentsEnabled bool      `json:"commentsEnabled"`
 }
 
 type Query struct {
 }
 
-type Todo struct {
-	ID   string `json:"id"`
-	Text string `json:"text"`
-	Done bool   `json:"done"`
-	User *User  `json:"user"`
-}
-
-type User struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+type Subscription struct {
 }
