@@ -10,16 +10,37 @@ import (
 	"fmt"
 
 	"github.com/C-4KE/simple-posts-service/graph/model"
+	"github.com/google/uuid"
 )
 
-// CreateTodo is the resolver for the createTodo field.
-func (r *mutationResolver) CreateTodo(ctx context.Context, input model.NewTodo) (*model.Todo, error) {
-	panic(fmt.Errorf("not implemented: CreateTodo - createTodo"))
+// AddPost is the resolver for the addPost field.
+func (r *mutationResolver) AddPost(ctx context.Context, newPost model.PostInput) (*model.Post, error) {
+	panic(fmt.Errorf("not implemented: AddPost - addPost"))
 }
 
-// Todos is the resolver for the todos field.
-func (r *queryResolver) Todos(ctx context.Context) ([]*model.Todo, error) {
-	panic(fmt.Errorf("not implemented: Todos - todos"))
+// AddComment is the resolver for the addComment field.
+func (r *mutationResolver) AddComment(ctx context.Context, newComment model.CommentInput) (*model.Comment, error) {
+	panic(fmt.Errorf("not implemented: AddComment - addComment"))
+}
+
+// UpdateCommentsEnabled is the resolver for the updateCommentsEnabled field.
+func (r *mutationResolver) UpdateCommentsEnabled(ctx context.Context, postID int, authorID uuid.UUID, newCommentsEnabled bool) (*model.Post, error) {
+	panic(fmt.Errorf("not implemented: UpdateCommentsEnabled - updateCommentsEnabled"))
+}
+
+// Posts is the resolver for the posts field.
+func (r *queryResolver) Posts(ctx context.Context) ([]*model.Post, error) {
+	panic(fmt.Errorf("not implemented: Posts - posts"))
+}
+
+// Post is the resolver for the post field.
+func (r *queryResolver) Post(ctx context.Context, postID int) (*model.Post, error) {
+	panic(fmt.Errorf("not implemented: Post - post"))
+}
+
+// CommentAdded is the resolver for the commentAdded field.
+func (r *subscriptionResolver) CommentAdded(ctx context.Context, postID int) (<-chan *model.Comment, error) {
+	panic(fmt.Errorf("not implemented: CommentAdded - commentAdded"))
 }
 
 // Mutation returns MutationResolver implementation.
@@ -28,5 +49,9 @@ func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
 // Query returns QueryResolver implementation.
 func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 
+// Subscription returns SubscriptionResolver implementation.
+func (r *Resolver) Subscription() SubscriptionResolver { return &subscriptionResolver{r} }
+
 type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
+type subscriptionResolver struct{ *Resolver }
