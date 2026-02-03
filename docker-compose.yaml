@@ -21,6 +21,22 @@ services:
     env_file:
       - .env
 
+  migrate:
+    image: kukymbr/goose-docker:3.26.0
+    container_name: posts_migrate
+    environment:
+      GOOSE_DRIVER: ${DB_PROTOCOL}
+      GOOSE_DBSTRING: "host=${DB_HOST} port=${DB_PORT} user=${DB_USER} password=${DB_PASSWORD} dbname=${DB_NAME} ${DB_OPTIONS}"
+    depends_on:
+      db:
+        condition: service_healthy
+      volumes:
+        - ./migrations:/migrations
+      networks:
+        - posts_network
+      env_file:
+        - .env
+
   app:
     build:
       context: .
