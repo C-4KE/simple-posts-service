@@ -9,10 +9,10 @@ import (
 )
 
 type Comment struct {
-	ID                int                `json:"id"`
+	ID                int64              `json:"id"`
 	AuthorID          uuid.UUID          `json:"authorID"`
-	PostID            int                `json:"postID"`
-	ParentID          *int               `json:"parentID,omitempty"`
+	PostID            int64              `json:"postID"`
+	ParentID          *int64             `json:"parentID,omitempty"`
 	Text              string             `json:"text"`
 	CreateDate        time.Time          `json:"createDate"`
 	RepliesConnection *CommentConnection `json:"repliesConnection"`
@@ -30,8 +30,8 @@ type CommentEdge struct {
 
 type CommentInput struct {
 	AuthorID uuid.UUID `json:"authorID"`
-	PostID   int       `json:"postID"`
-	ParentID *int      `json:"parentID,omitempty"`
+	PostID   int64     `json:"postID"`
+	ParentID *int64    `json:"parentID,omitempty"`
 	Text     string    `json:"text"`
 }
 
@@ -44,7 +44,7 @@ type PageInfo struct {
 }
 
 type Post struct {
-	ID                 int                `json:"id"`
+	ID                 int64              `json:"id"`
 	AuthorID           uuid.UUID          `json:"authorID"`
 	Title              string             `json:"title"`
 	Text               string             `json:"text"`

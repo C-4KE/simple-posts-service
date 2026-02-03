@@ -24,7 +24,7 @@ func (r *mutationResolver) AddComment(ctx context.Context, newComment model.Comm
 }
 
 // UpdateCommentsEnabled is the resolver for the updateCommentsEnabled field.
-func (r *mutationResolver) UpdateCommentsEnabled(ctx context.Context, postID int, authorID uuid.UUID, newCommentsEnabled bool) (*model.Post, error) {
+func (r *mutationResolver) UpdateCommentsEnabled(ctx context.Context, postID int64, authorID uuid.UUID, newCommentsEnabled bool) (*model.Post, error) {
 	panic(fmt.Errorf("not implemented: UpdateCommentsEnabled - updateCommentsEnabled"))
 }
 
@@ -34,12 +34,12 @@ func (r *queryResolver) Posts(ctx context.Context) ([]*model.Post, error) {
 }
 
 // Post is the resolver for the post field.
-func (r *queryResolver) Post(ctx context.Context, postID int) (*model.Post, error) {
+func (r *queryResolver) Post(ctx context.Context, postID int64) (*model.Post, error) {
 	panic(fmt.Errorf("not implemented: Post - post"))
 }
 
 // CommentAdded is the resolver for the commentAdded field.
-func (r *subscriptionResolver) CommentAdded(ctx context.Context, postID int) (<-chan *model.Comment, error) {
+func (r *subscriptionResolver) CommentAdded(ctx context.Context, postID int64) (<-chan *model.Comment, error) {
 	panic(fmt.Errorf("not implemented: CommentAdded - commentAdded"))
 }
 
