@@ -8,7 +8,22 @@ type Post {
   title: String!
   text: String!
   commentsEnabled: Boolean!
-  # comments
+  commentsConnection (first: Int, after: String): CommentConnection!
+}
+
+type CommentConnection {
+  edges: [CommentEdge!]!
+  pageInfo: PageInfo!
+}
+
+type CommentEdge {
+  node: Comment!
+  cursor: String!
+}
+
+type PageInfo {
+  hasNextPage: Boolean!
+  endCursor: String
 }
 
 type Comment {
@@ -18,7 +33,7 @@ type Comment {
   parentID: Int64
   text: String!
   createDate: Time!
-  # replies
+  repliesConnection (first: Int, after: String): CommentConnection!
 }
 
 type Query {
