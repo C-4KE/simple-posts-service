@@ -48,6 +48,7 @@ type Post struct {
 	AuthorID           uuid.UUID          `json:"authorID"`
 	Title              string             `json:"title"`
 	Text               string             `json:"text"`
+	CreateDate         time.Time          `json:"createDate"`
 	CommentsEnabled    bool               `json:"commentsEnabled"`
 	CommentsConnection *CommentConnection `json:"commentsConnection"`
 }

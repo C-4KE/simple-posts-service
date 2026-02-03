@@ -85,6 +85,7 @@ type ComplexityRoot struct {
 		AuthorID           func(childComplexity int) int
 		CommentsConnection func(childComplexity int, first *int32, after *string) int
 		CommentsEnabled    func(childComplexity int) int
+		CreateDate         func(childComplexity int) int
 		ID                 func(childComplexity int) int
 		Text               func(childComplexity int) int
 		Title              func(childComplexity int) int
@@ -276,6 +277,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Post.CommentsEnabled(childComplexity), true
+	case "Post.createDate":
+		if e.complexity.Post.CreateDate == nil {
+			break
+		}
+
+		return e.complexity.Post.CreateDate(childComplexity), true
 	case "Post.id":
 		if e.complexity.Post.ID == nil {
 			break
@@ -1025,6 +1032,8 @@ func (ec *executionContext) fieldContext_Mutation_addPost(ctx context.Context, f
 				return ec.fieldContext_Post_title(ctx, field)
 			case "text":
 				return ec.fieldContext_Post_text(ctx, field)
+			case "createDate":
+				return ec.fieldContext_Post_createDate(ctx, field)
 			case "commentsEnabled":
 				return ec.fieldContext_Post_commentsEnabled(ctx, field)
 			case "commentsConnection":
@@ -1137,6 +1146,8 @@ func (ec *executionContext) fieldContext_Mutation_updateCommentsEnabled(ctx cont
 				return ec.fieldContext_Post_title(ctx, field)
 			case "text":
 				return ec.fieldContext_Post_text(ctx, field)
+			case "createDate":
+				return ec.fieldContext_Post_createDate(ctx, field)
 			case "commentsEnabled":
 				return ec.fieldContext_Post_commentsEnabled(ctx, field)
 			case "commentsConnection":
@@ -1333,6 +1344,35 @@ func (ec *executionContext) fieldContext_Post_text(_ context.Context, field grap
 	return fc, nil
 }
 
+func (ec *executionContext) _Post_createDate(ctx context.Context, field graphql.CollectedField, obj *model.Post) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_Post_createDate,
+		func(ctx context.Context) (any, error) {
+			return obj.CreateDate, nil
+		},
+		nil,
+		ec.marshalNTime2timeᚐTime,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_Post_createDate(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Post",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Post_commentsEnabled(ctx context.Context, field graphql.CollectedField, obj *model.Post) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -1440,6 +1480,8 @@ func (ec *executionContext) fieldContext_Query_posts(_ context.Context, field gr
 				return ec.fieldContext_Post_title(ctx, field)
 			case "text":
 				return ec.fieldContext_Post_text(ctx, field)
+			case "createDate":
+				return ec.fieldContext_Post_createDate(ctx, field)
 			case "commentsEnabled":
 				return ec.fieldContext_Post_commentsEnabled(ctx, field)
 			case "commentsConnection":
@@ -1484,6 +1526,8 @@ func (ec *executionContext) fieldContext_Query_post(ctx context.Context, field g
 				return ec.fieldContext_Post_title(ctx, field)
 			case "text":
 				return ec.fieldContext_Post_text(ctx, field)
+			case "createDate":
+				return ec.fieldContext_Post_createDate(ctx, field)
 			case "commentsEnabled":
 				return ec.fieldContext_Post_commentsEnabled(ctx, field)
 			case "commentsConnection":
@@ -3507,6 +3551,11 @@ func (ec *executionContext) _Post(ctx context.Context, sel ast.SelectionSet, obj
 			}
 		case "text":
 			out.Values[i] = ec._Post_text(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "createDate":
+			out.Values[i] = ec._Post_createDate(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
