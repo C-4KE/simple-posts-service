@@ -146,6 +146,11 @@ func (inMemoryAccessor *InMemoryAccessor) AddComment(ctx context.Context, newCom
 		return nil, err
 	}
 
+	_, ok = inMemoryAccessor.storage.commentsByPath[newCommentPath]
+	if !ok {
+		inMemoryAccessor.storage.commentsByPath[newCommentPath] = make([]int64, 3)
+	}
+
 	inMemoryAccessor.storage.commentsByPath[newCommentPath] = append(inMemoryAccessor.storage.commentsByPath[newCommentPath], comment.ID)
 	inMemoryAccessor.storage.commentPaths[comment.ID] = newCommentPath
 	inMemoryAccessor.storage.comments[comment.ID] = comment
