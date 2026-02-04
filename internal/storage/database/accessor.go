@@ -3,9 +3,12 @@ package database
 import (
 	"context"
 	"database/sql"
+	"errors"
+	"strconv"
 	"time"
 
 	"github.com/C-4KE/simple-posts-service/graph/model"
+	"github.com/google/uuid"
 )
 
 type DatabaseAccessor struct {
@@ -100,4 +103,46 @@ func (databaseAccessor *DatabaseAccessor) GetAllPosts(ctx context.Context) ([]*m
 	}
 
 	return posts, nil
+}
+
+func (databaseAccessor *DatabaseAccessor) UpdateCommentsEnabled(ctx context.Context, postID int64, authorID uuid.UUID, newCommentsEnabled bool) (*model.Post, error) {
+	var dbPostId int64
+	var dbAuthorID uuid.UUID
+
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+
+	default:
+	}
+
+	querySelectPost := `SELECT post_id, author_id
+						FROM posts
+						WHERE post_id = $1 AND author_id = $2`
+
+	err := databaseAccessor.storage.QueryRowContext(ctx, querySelectPost, postID, authorID).Scan(&dbPostId, &dbAuthorID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if dbPostId != postID {
+		return nil, errors.New("Post with ID " + strconv.FormatInt(postID, 10) + " was not found")
+	}
+
+	if dbAuthorID != authorID {
+		return nil, errors.New("User with ID " + strconv.FormatUint(uint64(authorID.ID()), 10) + " is not the author of the post with ID " + strconv.FormatInt(postID, 10) + ".")
+	}
+
+	var post model.Post
+	queryUpdatePost := `UPDATE posts SET comments_enabled = $1
+						WHERE post_id = $2
+						RETURNING post_id, author_id, title, text, create_date, comments_enabled`
+	err = databaseAccessor.storage.QueryRowContext(ctx, queryUpdatePost, postID, newCommentsEnabled).Scan(&post.ID, &post.AuthorID, &post.Title, &post.Text, &post.CreateDate, &post.CommentsEnabled)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &post, nil
 }
