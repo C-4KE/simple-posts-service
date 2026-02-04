@@ -12,6 +12,10 @@ import (
 	"github.com/google/uuid"
 )
 
+const (
+	maxCommentTextLength = 2000
+)
+
 type inMemoryStorage struct {
 	posts        map[int64]*model.Post
 	comments     map[int64]*model.Comment
@@ -104,4 +108,51 @@ func (inMemoryAccessor *InMemoryAccessor) UpdateCommentsEnabled(ctx context.Cont
 
 	post.CommentsEnabled = newCommentsEnabled
 	return post, nil
+}
+
+func (inMemoryAccessor *InMemoryAccessor) AddComment(ctx context.Context, newComment *model.CommentInput) (*model.Comment, error) {
+	_, ok := inMemoryAccessor.storage.posts[newComment.PostID]
+
+	if !ok {
+		return nil, errors.New("Post with ID " + strconv.FormatInt(newComment.PostID, 10) + " was not found")
+	}
+
+	if len(newComment.Text) > maxCommentTextLength {
+		return nil, errors.New("Length of the text ext in the new comment is too big (greater than " + strconv.Itoa(maxCommentTextLength) + ")")
+	}
+
+	comment := &model.Comment{
+		AuthorID:   newComment.AuthorID,
+		PostID:     newComment.PostID,
+		ParentID:   newComment.ParentID,
+		Text:       newComment.Text,
+		CreateDate: time.Now(),
+	}
+
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+
+	default:
+	}
+
+	inMemoryAccessor.lastCommentID++
+	comment.ID = inMemoryAccessor.lastCommentID
+
+	var newCommentPath string
+	if newComment.ParentID != nil {
+		_, ok := inMemoryAccessor.storage.comments[*(newComment.ParentID)]
+		if !ok {
+			errors.New("Parent comment with ID " + strconv.FormatInt(*newComment.ParentID, 10) + " was not found")
+		}
+
+		newCommentPath = inMemoryAccessor.storage.commentPaths[*newComment.ParentID] + "." + strconv.FormatInt(comment.ID, 10)
+	} else {
+		newCommentPath = strconv.FormatInt(comment.ID, 10)
+	}
+
+	inMemoryAccessor.storage.commentPaths[comment.ID] = newCommentPath
+	inMemoryAccessor.storage.comments[comment.ID] = comment
+
+	return comment, nil
 }
