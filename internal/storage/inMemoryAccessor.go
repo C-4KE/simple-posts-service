@@ -73,7 +73,7 @@ func (inMemoryAccessor *InMemoryAccessor) GetPost(ctx context.Context, postID in
 	if ok {
 		return post, nil
 	} else {
-		return nil, errors.New("Post with ID " + strconv.Itoa(int(postID)) + " was not found")
+		return nil, errors.New("Post with ID " + strconv.FormatInt(postID, 10) + " was not found")
 	}
 }
 
@@ -92,11 +92,11 @@ func (inMemoryAccessor *InMemoryAccessor) UpdateCommentsEnabled(ctx context.Cont
 	post, ok := inMemoryAccessor.storage.posts[postID]
 
 	if !ok {
-		return nil, errors.New("Post with ID " + strconv.Itoa(int(postID)) + " was not found")
+		return nil, errors.New("Post with ID " + strconv.FormatInt(postID, 10) + " was not found")
 	}
 
 	if post.AuthorID != authorID {
-		return nil, errors.New("User with ID " + strconv.Itoa(int(authorID.ID())) + " is not the author of the post with ID " + strconv.Itoa(int(postID)) + ".")
+		return nil, errors.New("User with ID " + strconv.FormatUint(uint64(authorID.ID()), 10) + " is not the author of the post with ID " + strconv.FormatInt(postID, 10) + ".")
 	}
 
 	select {
