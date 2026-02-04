@@ -7,7 +7,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type Storage interface {
+type StorageAccessor interface {
 	AddPost(ctx context.Context, newPost *model.PostInput) (*model.Post, error)
 	GetPost(ctx context.Context, postID int64) (*model.Post, error)
 	GetAllPosts(ctx context.Context) ([]*model.Post, error)
