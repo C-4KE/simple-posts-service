@@ -238,3 +238,94 @@ func (databaseAccessor *DatabaseAccessor) AddComment(ctx context.Context, newCom
 
 	return comment, nil
 }
+
+func (databaseAccessor *DatabaseAccessor) GetCommentPath(ctx context.Context, postID int64, parentID *int64) (string, error) {
+	var commentsEnabled bool
+
+	querySelectPost := `SELECT post_id
+						FROM posts
+						WHERE post_id = $1`
+	err := databaseAccessor.storage.QueryRowContext(ctx, querySelectPost, postID).Scan(&commentsEnabled)
+
+	if err != nil {
+		return "", err
+	}
+
+	select {
+	case <-ctx.Done():
+		return "", ctx.Err()
+
+	default:
+	}
+
+	querySelectComment := `SELECT path
+							FROM comments
+							WHERE comment_id = $1`
+
+	var parentPath string
+	err = databaseAccessor.storage.QueryRowContext(ctx, querySelectComment, parentID).Scan(&parentPath)
+
+	var path string
+	switch err {
+	case sql.ErrNoRows:
+		path = strconv.FormatInt(postID, 10)
+	case nil:
+		path = strings.Join([]string{parentPath, strconv.FormatInt(*parentID, 10)}, ".")
+	default:
+	}
+
+	if err != nil {
+		return "", err
+	}
+
+	return path, nil
+}
+
+func (databaseAccessor *DatabaseAccessor) GetCommentsLevel(ctx context.Context, postID int64, path string) ([]*model.Comment, error) {
+	var commentsEnabled bool
+
+	querySelectPost := `SELECT post_id
+						FROM posts
+						WHERE post_id = $1`
+	err := databaseAccessor.storage.QueryRowContext(ctx, querySelectPost, postID).Scan(&commentsEnabled)
+
+	if err != nil {
+		return nil, err
+	}
+
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+
+	default:
+	}
+
+	comments := make([]*model.Comment, 10)
+
+	querySelectComments := `SELECT comment_id, author_id, post_id, parent_id, text, create_date
+							FROM comments
+							WHERE path = $1`
+
+	rows, err := databaseAccessor.storage.QueryContext(ctx, querySelectComments, path)
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+	for rows.Next() {
+		var comment model.Comment
+		if err = rows.Scan(&comment.ID,
+			&comment.AuthorID,
+			&comment.PostID,
+			&comment.ParentID,
+			&comment.Text,
+			&comment.CreateDate); err != nil {
+			return nil, err
+		}
+
+		comments = append(comments, &comment)
+	}
+
+	return comments, nil
+}
