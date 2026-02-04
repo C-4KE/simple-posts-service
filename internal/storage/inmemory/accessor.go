@@ -103,10 +103,14 @@ func (inMemoryAccessor *InMemoryAccessor) UpdateCommentsEnabled(ctx context.Cont
 }
 
 func (inMemoryAccessor *InMemoryAccessor) AddComment(ctx context.Context, newComment *model.CommentInput) (*model.Comment, error) {
-	_, ok := inMemoryAccessor.storage.posts.Get(newComment.PostID)
+	post, ok := inMemoryAccessor.storage.posts.Get(newComment.PostID)
 
 	if !ok {
 		return nil, errors.New("Post with ID " + strconv.FormatInt(newComment.PostID, 10) + " was not found")
+	}
+
+	if !post.CommentsEnabled {
+		return nil, errors.New("Comments on post " + strconv.FormatInt(post.ID, 10) + " are disabled.")
 	}
 
 	if len(newComment.Text) > maxCommentTextLength {
