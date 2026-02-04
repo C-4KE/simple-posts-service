@@ -143,7 +143,7 @@ func (inMemoryAccessor *InMemoryAccessor) AddComment(ctx context.Context, newCom
 	if newComment.ParentID != nil {
 		_, ok := inMemoryAccessor.storage.comments[*(newComment.ParentID)]
 		if !ok {
-			errors.New("Parent comment with ID " + strconv.FormatInt(*newComment.ParentID, 10) + " was not found")
+			return nil, errors.New("Parent comment with ID " + strconv.FormatInt(*newComment.ParentID, 10) + " was not found")
 		}
 
 		newCommentPath = inMemoryAccessor.storage.commentPaths[*newComment.ParentID] + "." + strconv.FormatInt(comment.ID, 10)
