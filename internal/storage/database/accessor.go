@@ -41,7 +41,12 @@ func (databaseAccessor *DatabaseAccessor) AddPost(ctx context.Context, newPost *
 						VALUES ($1, $2, $3, $4, $5)
 						RETURNING post_id`
 
-	err := databaseAccessor.storage.QueryRowContext(ctx, queryInsertPost, post.AuthorID, post.Title, post.Text, post.CreateDate, post.CommentsEnabled).Scan(&post.ID)
+	err := databaseAccessor.storage.QueryRowContext(ctx, queryInsertPost,
+		post.AuthorID,
+		post.Title,
+		post.Text,
+		post.CreateDate,
+		post.CommentsEnabled).Scan(&post.ID)
 
 	if err != nil {
 		return nil, err
@@ -64,7 +69,12 @@ func (databaseAccessor *DatabaseAccessor) GetPost(ctx context.Context, postID in
 						FROM posts
 						WHERE post_id = $1`
 
-	err := databaseAccessor.storage.QueryRowContext(ctx, querySelectPost, postID).Scan(&post.ID, &post.AuthorID, &post.Title, &post.Text, &post.CreateDate, &post.CommentsEnabled)
+	err := databaseAccessor.storage.QueryRowContext(ctx, querySelectPost, postID).Scan(&post.ID,
+		&post.AuthorID,
+		&post.Title,
+		&post.Text,
+		&post.CreateDate,
+		&post.CommentsEnabled)
 
 	if err != nil {
 		return nil, err
@@ -83,10 +93,10 @@ func (databaseAccessor *DatabaseAccessor) GetAllPosts(ctx context.Context) ([]*m
 	default:
 	}
 
-	querySelectPost := `SELECT post_id, author_id, title, text, create_date, comments_enabled
+	querySelectPosts := `SELECT post_id, author_id, title, text, create_date, comments_enabled
 						FROM posts`
 
-	rows, err := databaseAccessor.storage.QueryContext(ctx, querySelectPost)
+	rows, err := databaseAccessor.storage.QueryContext(ctx, querySelectPosts)
 
 	if err != nil {
 		return nil, err
@@ -95,7 +105,12 @@ func (databaseAccessor *DatabaseAccessor) GetAllPosts(ctx context.Context) ([]*m
 	defer rows.Close()
 	for rows.Next() {
 		var post model.Post
-		if err = rows.Scan(&post.ID, &post.AuthorID, &post.Title, &post.Text, &post.CreateDate, &post.CommentsEnabled); err != nil {
+		if err = rows.Scan(&post.ID,
+			&post.AuthorID,
+			&post.Title,
+			&post.Text,
+			&post.CreateDate,
+			&post.CommentsEnabled); err != nil {
 			return nil, err
 		}
 
@@ -138,7 +153,12 @@ func (databaseAccessor *DatabaseAccessor) UpdateCommentsEnabled(ctx context.Cont
 	queryUpdatePost := `UPDATE posts SET comments_enabled = $1
 						WHERE post_id = $2
 						RETURNING post_id, author_id, title, text, create_date, comments_enabled`
-	err = databaseAccessor.storage.QueryRowContext(ctx, queryUpdatePost, postID, newCommentsEnabled).Scan(&post.ID, &post.AuthorID, &post.Title, &post.Text, &post.CreateDate, &post.CommentsEnabled)
+	err = databaseAccessor.storage.QueryRowContext(ctx, queryUpdatePost, postID, newCommentsEnabled).Scan(&post.ID,
+		&post.AuthorID,
+		&post.Title,
+		&post.Text,
+		&post.CreateDate,
+		&post.CommentsEnabled)
 
 	if err != nil {
 		return nil, err
