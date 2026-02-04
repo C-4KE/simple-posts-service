@@ -17,9 +17,10 @@ const (
 )
 
 type inMemoryStorage struct {
-	posts        map[int64]*model.Post
-	comments     map[int64]*model.Comment
-	commentPaths map[int64]string
+	posts          map[int64]*model.Post
+	comments       map[int64]*model.Comment
+	commentsByPath map[string][]int64
+	commentPaths   map[int64]string
 }
 
 type InMemoryAccessor struct {
@@ -146,11 +147,12 @@ func (inMemoryAccessor *InMemoryAccessor) AddComment(ctx context.Context, newCom
 			return nil, errors.New("Parent comment with ID " + strconv.FormatInt(*newComment.ParentID, 10) + " was not found")
 		}
 
-		newCommentPath = inMemoryAccessor.storage.commentPaths[*newComment.ParentID] + "." + strconv.FormatInt(comment.ID, 10)
+		newCommentPath = inMemoryAccessor.storage.commentPaths[*newComment.ParentID] + "." + strconv.FormatInt(*comment.ParentID, 10)
 	} else {
-		newCommentPath = strconv.FormatInt(comment.ID, 10)
+		newCommentPath = strconv.FormatInt(comment.PostID, 10)
 	}
 
+	inMemoryAccessor.storage.commentsByPath[newCommentPath] = append(inMemoryAccessor.storage.commentsByPath[newCommentPath], comment.ID)
 	inMemoryAccessor.storage.commentPaths[comment.ID] = newCommentPath
 	inMemoryAccessor.storage.comments[comment.ID] = comment
 
