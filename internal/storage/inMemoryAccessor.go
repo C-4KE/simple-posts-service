@@ -140,16 +140,10 @@ func (inMemoryAccessor *InMemoryAccessor) AddComment(ctx context.Context, newCom
 	inMemoryAccessor.lastCommentID++
 	comment.ID = inMemoryAccessor.lastCommentID
 
-	var newCommentPath string
-	if newComment.ParentID != nil {
-		_, ok := inMemoryAccessor.storage.comments[*(newComment.ParentID)]
-		if !ok {
-			return nil, errors.New("Parent comment with ID " + strconv.FormatInt(*newComment.ParentID, 10) + " was not found")
-		}
+	newCommentPath, err := inMemoryAccessor.GetCommentPath(ctx, newComment.PostID, newComment.ParentID)
 
-		newCommentPath = inMemoryAccessor.storage.commentPaths[*newComment.ParentID] + "." + strconv.FormatInt(*comment.ParentID, 10)
-	} else {
-		newCommentPath = strconv.FormatInt(comment.PostID, 10)
+	if err != nil {
+		return nil, err
 	}
 
 	inMemoryAccessor.storage.commentsByPath[newCommentPath] = append(inMemoryAccessor.storage.commentsByPath[newCommentPath], comment.ID)
@@ -157,4 +151,33 @@ func (inMemoryAccessor *InMemoryAccessor) AddComment(ctx context.Context, newCom
 	inMemoryAccessor.storage.comments[comment.ID] = comment
 
 	return comment, nil
+}
+
+func (inMemoryAccessor *InMemoryAccessor) GetCommentPath(ctx context.Context, postID int64, parentID *int64) (string, error) {
+	_, ok := inMemoryAccessor.storage.posts[postID]
+
+	if !ok {
+		return "", errors.New("Post with ID " + strconv.FormatInt(postID, 10) + " was not found")
+	}
+
+	select {
+	case <-ctx.Done():
+		return "", ctx.Err()
+
+	default:
+	}
+
+	var commentPath string
+	if parentID != nil {
+		_, ok := inMemoryAccessor.storage.comments[*parentID]
+		if !ok {
+			return "", errors.New("Parent comment with ID " + strconv.FormatInt(*parentID, 10) + " was not found")
+		}
+
+		commentPath = inMemoryAccessor.storage.commentPaths[*parentID] + "." + strconv.FormatInt(*parentID, 10)
+	} else {
+		commentPath = strconv.FormatInt(postID, 10)
+	}
+
+	return commentPath, nil
 }
