@@ -186,3 +186,31 @@ func (inMemoryAccessor *InMemoryAccessor) GetCommentPath(ctx context.Context, po
 
 	return commentPath, nil
 }
+
+func (inMemoryAccessor *InMemoryAccessor) GetCommentsLevel(ctx context.Context, postID int64, path string) ([]*model.Comment, error) {
+	_, ok := inMemoryAccessor.storage.posts[postID]
+
+	if !ok {
+		return nil, errors.New("Post with ID " + strconv.FormatInt(postID, 10) + " was not found")
+	}
+
+	commentIDs, ok := inMemoryAccessor.storage.commentsByPath[path]
+
+	if !ok {
+		return nil, errors.New("Path is incorrect. Path: " + path)
+	}
+
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+
+	default:
+	}
+
+	comments := make([]*model.Comment, len(commentIDs))
+	for idx, commentID := range commentIDs {
+		comments[idx] = inMemoryAccessor.storage.comments[commentID]
+	}
+
+	return comments, nil
+}

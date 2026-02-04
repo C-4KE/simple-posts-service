@@ -15,5 +15,5 @@ type StorageAccessor interface {
 
 	AddComment(ctx context.Context, newComment *model.CommentInput) (*model.Comment, error)
 	GetCommentPath(ctx context.Context, postID int64, parentID *int64) (string, error)
-	GetCommentsBranch(ctx context.Context, postID int64, path string) ([]*model.Comment, error)
+	GetCommentsLevel(ctx context.Context, postID int64, path string) ([]*model.Comment, error)
 }
