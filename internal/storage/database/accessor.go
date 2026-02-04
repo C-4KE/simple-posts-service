@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/C-4KE/simple-posts-service/graph/model"
@@ -165,4 +166,75 @@ func (databaseAccessor *DatabaseAccessor) UpdateCommentsEnabled(ctx context.Cont
 	}
 
 	return &post, nil
+}
+
+func (databaseAccessor *DatabaseAccessor) AddComment(ctx context.Context, newComment *model.CommentInput) (*model.Comment, error) {
+	var commentsEnabled bool
+
+	querySelectPost := `SELECT comments_enabled
+						FROM posts
+						WHERE post_id = $1`
+	err := databaseAccessor.storage.QueryRowContext(ctx, querySelectPost, newComment.PostID).Scan(&commentsEnabled)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if !commentsEnabled {
+		return nil, errors.New("Comments on post " + strconv.FormatInt(newComment.PostID, 10) + " are disabled.")
+	}
+
+	comment := &model.Comment{
+		AuthorID:   newComment.AuthorID,
+		PostID:     newComment.PostID,
+		ParentID:   newComment.ParentID,
+		Text:       newComment.Text,
+		CreateDate: time.Now(),
+	}
+
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+
+	default:
+	}
+
+	querySelectComment := `SELECT path, replies_level
+							FROM comments
+							WHERE comment_id = $1`
+
+	var parentPath string
+	var parentRepliesLevel int
+	err = databaseAccessor.storage.QueryRowContext(ctx, querySelectComment, newComment.ParentID).Scan(&parentPath, &parentRepliesLevel)
+
+	queryInsertComment := `INSERT INTO comments (author_id, post_id, parent_id, text, create_date, path, replies_level)
+							VALUES ($1, $2, $3, $4, $5, $6, $7)
+							RETURNING comment_id`
+
+	if err == sql.ErrNoRows {
+		err = databaseAccessor.storage.QueryRowContext(ctx, queryInsertComment,
+			comment.AuthorID,
+			comment.PostID,
+			comment.ParentID,
+			comment.Text,
+			comment.CreateDate,
+			comment.PostID,
+			0).Scan(&comment.ID)
+	} else if err == nil {
+
+		err = databaseAccessor.storage.QueryRowContext(ctx, queryInsertComment,
+			comment.AuthorID,
+			comment.PostID,
+			comment.ParentID,
+			comment.Text,
+			comment.CreateDate,
+			strings.Join([]string{parentPath, strconv.FormatInt(*comment.ParentID, 10)}, "."),
+			parentRepliesLevel+1).Scan(&comment.ID)
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return comment, nil
 }
