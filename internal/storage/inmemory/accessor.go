@@ -1,4 +1,4 @@
-package storage
+package inmemory
 
 import (
 	"context"
@@ -16,20 +16,13 @@ const (
 	maxCommentTextLength = 2000
 )
 
-type inMemoryStorage struct {
-	posts          map[int64]*model.Post
-	comments       map[int64]*model.Comment
-	commentsByPath map[string][]int64
-	commentPaths   map[int64]string
-}
-
 type InMemoryAccessor struct {
-	storage       *inMemoryStorage
+	storage       *InMemoryStorage
 	lastPostID    int64
 	lastCommentID int64
 }
 
-func NewInMemoryAccessor(storage *inMemoryStorage) *InMemoryAccessor {
+func NewInMemoryAccessor(storage *InMemoryStorage) *InMemoryAccessor {
 	return &InMemoryAccessor{
 		storage:       storage,
 		lastPostID:    -1,
