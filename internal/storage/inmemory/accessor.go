@@ -3,8 +3,6 @@ package inmemory
 import (
 	"context"
 	"errors"
-	"maps"
-	"slices"
 	"strconv"
 	"time"
 
@@ -49,7 +47,7 @@ func (inMemoryAccessor *InMemoryAccessor) AddPost(ctx context.Context, newPost *
 	inMemoryAccessor.lastPostID++
 	post.ID = inMemoryAccessor.lastPostID
 
-	inMemoryAccessor.storage.posts[post.ID] = post
+	inMemoryAccessor.storage.posts.Set(post.ID, post)
 
 	return post, nil
 }
@@ -62,7 +60,7 @@ func (inMemoryAccessor *InMemoryAccessor) GetPost(ctx context.Context, postID in
 	default:
 	}
 
-	post, ok := inMemoryAccessor.storage.posts[postID]
+	post, ok := inMemoryAccessor.storage.posts.Get(postID)
 
 	if ok {
 		return post, nil
@@ -79,11 +77,11 @@ func (InMemoryAccessor *InMemoryAccessor) GetAllPosts(ctx context.Context) ([]*m
 	default:
 	}
 
-	return slices.Collect(maps.Values(InMemoryAccessor.storage.posts)), nil
+	return InMemoryAccessor.storage.posts.GetValues(), nil
 }
 
 func (inMemoryAccessor *InMemoryAccessor) UpdateCommentsEnabled(ctx context.Context, postID int64, authorID uuid.UUID, newCommentsEnabled bool) (*model.Post, error) {
-	post, ok := inMemoryAccessor.storage.posts[postID]
+	post, ok := inMemoryAccessor.storage.posts.Get(postID)
 
 	if !ok {
 		return nil, errors.New("Post with ID " + strconv.FormatInt(postID, 10) + " was not found")
@@ -105,7 +103,7 @@ func (inMemoryAccessor *InMemoryAccessor) UpdateCommentsEnabled(ctx context.Cont
 }
 
 func (inMemoryAccessor *InMemoryAccessor) AddComment(ctx context.Context, newComment *model.CommentInput) (*model.Comment, error) {
-	_, ok := inMemoryAccessor.storage.posts[newComment.PostID]
+	_, ok := inMemoryAccessor.storage.posts.Get(newComment.PostID)
 
 	if !ok {
 		return nil, errors.New("Post with ID " + strconv.FormatInt(newComment.PostID, 10) + " was not found")
@@ -139,20 +137,22 @@ func (inMemoryAccessor *InMemoryAccessor) AddComment(ctx context.Context, newCom
 		return nil, err
 	}
 
-	_, ok = inMemoryAccessor.storage.commentsByPath[newCommentPath]
+	_, ok = inMemoryAccessor.storage.commentsByPath.Get(newCommentPath)
 	if !ok {
-		inMemoryAccessor.storage.commentsByPath[newCommentPath] = make([]int64, 3)
+		inMemoryAccessor.storage.commentsByPath.Set(newCommentPath, make([]int64, 5))
 	}
 
-	inMemoryAccessor.storage.commentsByPath[newCommentPath] = append(inMemoryAccessor.storage.commentsByPath[newCommentPath], comment.ID)
-	inMemoryAccessor.storage.commentPaths[comment.ID] = newCommentPath
-	inMemoryAccessor.storage.comments[comment.ID] = comment
+	commentsByPath, _ := inMemoryAccessor.storage.commentsByPath.Get(newCommentPath)
+
+	inMemoryAccessor.storage.commentsByPath.Set(newCommentPath, append(commentsByPath, comment.ID))
+	inMemoryAccessor.storage.commentPaths.Set(comment.ID, newCommentPath)
+	inMemoryAccessor.storage.comments.Set(comment.ID, comment)
 
 	return comment, nil
 }
 
 func (inMemoryAccessor *InMemoryAccessor) GetCommentPath(ctx context.Context, postID int64, parentID *int64) (string, error) {
-	_, ok := inMemoryAccessor.storage.posts[postID]
+	_, ok := inMemoryAccessor.storage.posts.Get(postID)
 
 	if !ok {
 		return "", errors.New("Post with ID " + strconv.FormatInt(postID, 10) + " was not found")
@@ -167,12 +167,17 @@ func (inMemoryAccessor *InMemoryAccessor) GetCommentPath(ctx context.Context, po
 
 	var commentPath string
 	if parentID != nil {
-		_, ok := inMemoryAccessor.storage.comments[*parentID]
+		_, ok := inMemoryAccessor.storage.comments.Get(*parentID)
 		if !ok {
 			return "", errors.New("Parent comment with ID " + strconv.FormatInt(*parentID, 10) + " was not found")
 		}
 
-		commentPath = inMemoryAccessor.storage.commentPaths[*parentID] + "." + strconv.FormatInt(*parentID, 10)
+		oldCommentPath, ok := inMemoryAccessor.storage.commentPaths.Get(*parentID)
+		if !ok {
+			return "", errors.New("Path for the comment with ID " + strconv.FormatInt(*parentID, 10) + " was not found")
+		}
+
+		commentPath = oldCommentPath + "." + strconv.FormatInt(*parentID, 10)
 	} else {
 		commentPath = strconv.FormatInt(postID, 10)
 	}
@@ -181,13 +186,13 @@ func (inMemoryAccessor *InMemoryAccessor) GetCommentPath(ctx context.Context, po
 }
 
 func (inMemoryAccessor *InMemoryAccessor) GetCommentsLevel(ctx context.Context, postID int64, path string) ([]*model.Comment, error) {
-	_, ok := inMemoryAccessor.storage.posts[postID]
+	_, ok := inMemoryAccessor.storage.posts.Get(postID)
 
 	if !ok {
 		return nil, errors.New("Post with ID " + strconv.FormatInt(postID, 10) + " was not found")
 	}
 
-	commentIDs, ok := inMemoryAccessor.storage.commentsByPath[path]
+	commentIDs, ok := inMemoryAccessor.storage.commentsByPath.Get(path)
 
 	if !ok {
 		return nil, errors.New("Path is incorrect. Path: " + path)
@@ -202,7 +207,7 @@ func (inMemoryAccessor *InMemoryAccessor) GetCommentsLevel(ctx context.Context, 
 
 	comments := make([]*model.Comment, len(commentIDs))
 	for idx, commentID := range commentIDs {
-		comments[idx] = inMemoryAccessor.storage.comments[commentID]
+		comments[idx], _ = inMemoryAccessor.storage.comments.Get(commentID)
 	}
 
 	return comments, nil
