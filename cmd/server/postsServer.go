@@ -11,6 +11,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/C-4KE/simple-posts-service/graph"
+	"github.com/C-4KE/simple-posts-service/internal/storage"
 	"github.com/vektah/gqlparser/v2/ast"
 )
 
@@ -22,7 +23,9 @@ func PostsServer() {
 		port = defaultPort
 	}
 
-	srv := handler.New(graph.NewExecutableSchema(graph.Config{Resolvers: &graph.Resolver{}}))
+	var storageAccessor *storage.Accessor // TODO : Написать инициализацию хранилища
+
+	srv := handler.New(graph.NewExecutableSchema(graph.Config{Resolvers: graph.NewResolver(storageAccessor)}))
 
 	srv.AddTransport(transport.Options{})
 	srv.AddTransport(transport.GET{})
