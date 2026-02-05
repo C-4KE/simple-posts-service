@@ -60,14 +60,14 @@ type ComplexityRoot struct {
 		Text              func(childComplexity int) int
 	}
 
-	CommentConnection struct {
-		Edges    func(childComplexity int) int
-		PageInfo func(childComplexity int) int
-	}
-
 	CommentEdge struct {
 		Cursor func(childComplexity int) int
 		Node   func(childComplexity int) int
+	}
+
+	CommentsConnection struct {
+		Edges    func(childComplexity int) int
+		PageInfo func(childComplexity int) int
 	}
 
 	Mutation struct {
@@ -181,19 +181,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.Comment.Text(childComplexity), true
 
-	case "CommentConnection.edges":
-		if e.complexity.CommentConnection.Edges == nil {
-			break
-		}
-
-		return e.complexity.CommentConnection.Edges(childComplexity), true
-	case "CommentConnection.pageInfo":
-		if e.complexity.CommentConnection.PageInfo == nil {
-			break
-		}
-
-		return e.complexity.CommentConnection.PageInfo(childComplexity), true
-
 	case "CommentEdge.cursor":
 		if e.complexity.CommentEdge.Cursor == nil {
 			break
@@ -206,6 +193,19 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.CommentEdge.Node(childComplexity), true
+
+	case "CommentsConnection.edges":
+		if e.complexity.CommentsConnection.Edges == nil {
+			break
+		}
+
+		return e.complexity.CommentsConnection.Edges(childComplexity), true
+	case "CommentsConnection.pageInfo":
+		if e.complexity.CommentsConnection.PageInfo == nil {
+			break
+		}
+
+		return e.complexity.CommentsConnection.PageInfo(childComplexity), true
 
 	case "Mutation.addComment":
 		if e.complexity.Mutation.AddComment == nil {
@@ -819,7 +819,7 @@ func (ec *executionContext) _Comment_repliesConnection(ctx context.Context, fiel
 			return obj.RepliesConnection, nil
 		},
 		nil,
-		ec.marshalNCommentConnection2ᚖgithubᚗcomᚋCᚑ4KEᚋsimpleᚑpostsᚑserviceᚋgraphᚋmodelᚐCommentConnection,
+		ec.marshalNCommentsConnection2ᚖgithubᚗcomᚋCᚑ4KEᚋsimpleᚑpostsᚑserviceᚋgraphᚋmodelᚐCommentsConnection,
 		true,
 		true,
 	)
@@ -834,11 +834,11 @@ func (ec *executionContext) fieldContext_Comment_repliesConnection(ctx context.C
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "edges":
-				return ec.fieldContext_CommentConnection_edges(ctx, field)
+				return ec.fieldContext_CommentsConnection_edges(ctx, field)
 			case "pageInfo":
-				return ec.fieldContext_CommentConnection_pageInfo(ctx, field)
+				return ec.fieldContext_CommentsConnection_pageInfo(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type CommentConnection", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type CommentsConnection", field.Name)
 		},
 	}
 	defer func() {
@@ -851,76 +851,6 @@ func (ec *executionContext) fieldContext_Comment_repliesConnection(ctx context.C
 	if fc.Args, err = ec.field_Comment_repliesConnection_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _CommentConnection_edges(ctx context.Context, field graphql.CollectedField, obj *model.CommentConnection) (ret graphql.Marshaler) {
-	return graphql.ResolveField(
-		ctx,
-		ec.OperationContext,
-		field,
-		ec.fieldContext_CommentConnection_edges,
-		func(ctx context.Context) (any, error) {
-			return obj.Edges, nil
-		},
-		nil,
-		ec.marshalNCommentEdge2ᚕᚖgithubᚗcomᚋCᚑ4KEᚋsimpleᚑpostsᚑserviceᚋgraphᚋmodelᚐCommentEdgeᚄ,
-		true,
-		true,
-	)
-}
-
-func (ec *executionContext) fieldContext_CommentConnection_edges(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "CommentConnection",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "node":
-				return ec.fieldContext_CommentEdge_node(ctx, field)
-			case "cursor":
-				return ec.fieldContext_CommentEdge_cursor(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type CommentEdge", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _CommentConnection_pageInfo(ctx context.Context, field graphql.CollectedField, obj *model.CommentConnection) (ret graphql.Marshaler) {
-	return graphql.ResolveField(
-		ctx,
-		ec.OperationContext,
-		field,
-		ec.fieldContext_CommentConnection_pageInfo,
-		func(ctx context.Context) (any, error) {
-			return obj.PageInfo, nil
-		},
-		nil,
-		ec.marshalNPageInfo2ᚖgithubᚗcomᚋCᚑ4KEᚋsimpleᚑpostsᚑserviceᚋgraphᚋmodelᚐPageInfo,
-		true,
-		true,
-	)
-}
-
-func (ec *executionContext) fieldContext_CommentConnection_pageInfo(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "CommentConnection",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "hasNextPage":
-				return ec.fieldContext_PageInfo_hasNextPage(ctx, field)
-			case "endCursor":
-				return ec.fieldContext_PageInfo_endCursor(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type PageInfo", field.Name)
-		},
 	}
 	return fc, nil
 }
@@ -994,6 +924,76 @@ func (ec *executionContext) fieldContext_CommentEdge_cursor(_ context.Context, f
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CommentsConnection_edges(ctx context.Context, field graphql.CollectedField, obj *model.CommentsConnection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_CommentsConnection_edges,
+		func(ctx context.Context) (any, error) {
+			return obj.Edges, nil
+		},
+		nil,
+		ec.marshalNCommentEdge2ᚕᚖgithubᚗcomᚋCᚑ4KEᚋsimpleᚑpostsᚑserviceᚋgraphᚋmodelᚐCommentEdgeᚄ,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_CommentsConnection_edges(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CommentsConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "node":
+				return ec.fieldContext_CommentEdge_node(ctx, field)
+			case "cursor":
+				return ec.fieldContext_CommentEdge_cursor(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type CommentEdge", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CommentsConnection_pageInfo(ctx context.Context, field graphql.CollectedField, obj *model.CommentsConnection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		ec.fieldContext_CommentsConnection_pageInfo,
+		func(ctx context.Context) (any, error) {
+			return obj.PageInfo, nil
+		},
+		nil,
+		ec.marshalNPageInfo2ᚖgithubᚗcomᚋCᚑ4KEᚋsimpleᚑpostsᚑserviceᚋgraphᚋmodelᚐPageInfo,
+		true,
+		true,
+	)
+}
+
+func (ec *executionContext) fieldContext_CommentsConnection_pageInfo(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CommentsConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "hasNextPage":
+				return ec.fieldContext_PageInfo_hasNextPage(ctx, field)
+			case "endCursor":
+				return ec.fieldContext_PageInfo_endCursor(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PageInfo", field.Name)
 		},
 	}
 	return fc, nil
@@ -1412,7 +1412,7 @@ func (ec *executionContext) _Post_commentsConnection(ctx context.Context, field 
 			return obj.CommentsConnection, nil
 		},
 		nil,
-		ec.marshalNCommentConnection2ᚖgithubᚗcomᚋCᚑ4KEᚋsimpleᚑpostsᚑserviceᚋgraphᚋmodelᚐCommentConnection,
+		ec.marshalNCommentsConnection2ᚖgithubᚗcomᚋCᚑ4KEᚋsimpleᚑpostsᚑserviceᚋgraphᚋmodelᚐCommentsConnection,
 		true,
 		true,
 	)
@@ -1427,11 +1427,11 @@ func (ec *executionContext) fieldContext_Post_commentsConnection(ctx context.Con
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "edges":
-				return ec.fieldContext_CommentConnection_edges(ctx, field)
+				return ec.fieldContext_CommentsConnection_edges(ctx, field)
 			case "pageInfo":
-				return ec.fieldContext_CommentConnection_pageInfo(ctx, field)
+				return ec.fieldContext_CommentsConnection_pageInfo(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type CommentConnection", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type CommentsConnection", field.Name)
 		},
 	}
 	defer func() {
@@ -3331,24 +3331,24 @@ func (ec *executionContext) _Comment(ctx context.Context, sel ast.SelectionSet, 
 	return out
 }
 
-var commentConnectionImplementors = []string{"CommentConnection"}
+var commentEdgeImplementors = []string{"CommentEdge"}
 
-func (ec *executionContext) _CommentConnection(ctx context.Context, sel ast.SelectionSet, obj *model.CommentConnection) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, commentConnectionImplementors)
+func (ec *executionContext) _CommentEdge(ctx context.Context, sel ast.SelectionSet, obj *model.CommentEdge) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, commentEdgeImplementors)
 
 	out := graphql.NewFieldSet(fields)
 	deferred := make(map[string]*graphql.FieldSet)
 	for i, field := range fields {
 		switch field.Name {
 		case "__typename":
-			out.Values[i] = graphql.MarshalString("CommentConnection")
-		case "edges":
-			out.Values[i] = ec._CommentConnection_edges(ctx, field, obj)
+			out.Values[i] = graphql.MarshalString("CommentEdge")
+		case "node":
+			out.Values[i] = ec._CommentEdge_node(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "pageInfo":
-			out.Values[i] = ec._CommentConnection_pageInfo(ctx, field, obj)
+		case "cursor":
+			out.Values[i] = ec._CommentEdge_cursor(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -3375,24 +3375,24 @@ func (ec *executionContext) _CommentConnection(ctx context.Context, sel ast.Sele
 	return out
 }
 
-var commentEdgeImplementors = []string{"CommentEdge"}
+var commentsConnectionImplementors = []string{"CommentsConnection"}
 
-func (ec *executionContext) _CommentEdge(ctx context.Context, sel ast.SelectionSet, obj *model.CommentEdge) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, commentEdgeImplementors)
+func (ec *executionContext) _CommentsConnection(ctx context.Context, sel ast.SelectionSet, obj *model.CommentsConnection) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, commentsConnectionImplementors)
 
 	out := graphql.NewFieldSet(fields)
 	deferred := make(map[string]*graphql.FieldSet)
 	for i, field := range fields {
 		switch field.Name {
 		case "__typename":
-			out.Values[i] = graphql.MarshalString("CommentEdge")
-		case "node":
-			out.Values[i] = ec._CommentEdge_node(ctx, field, obj)
+			out.Values[i] = graphql.MarshalString("CommentsConnection")
+		case "edges":
+			out.Values[i] = ec._CommentsConnection_edges(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "cursor":
-			out.Values[i] = ec._CommentEdge_cursor(ctx, field, obj)
+		case "pageInfo":
+			out.Values[i] = ec._CommentsConnection_pageInfo(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -4068,16 +4068,6 @@ func (ec *executionContext) marshalNComment2ᚖgithubᚗcomᚋCᚑ4KEᚋsimple�
 	return ec._Comment(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNCommentConnection2ᚖgithubᚗcomᚋCᚑ4KEᚋsimpleᚑpostsᚑserviceᚋgraphᚋmodelᚐCommentConnection(ctx context.Context, sel ast.SelectionSet, v *model.CommentConnection) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._CommentConnection(ctx, sel, v)
-}
-
 func (ec *executionContext) marshalNCommentEdge2ᚕᚖgithubᚗcomᚋCᚑ4KEᚋsimpleᚑpostsᚑserviceᚋgraphᚋmodelᚐCommentEdgeᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.CommentEdge) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
@@ -4135,6 +4125,16 @@ func (ec *executionContext) marshalNCommentEdge2ᚖgithubᚗcomᚋCᚑ4KEᚋsimp
 func (ec *executionContext) unmarshalNCommentInput2githubᚗcomᚋCᚑ4KEᚋsimpleᚑpostsᚑserviceᚋgraphᚋmodelᚐCommentInput(ctx context.Context, v any) (model.CommentInput, error) {
 	res, err := ec.unmarshalInputCommentInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNCommentsConnection2ᚖgithubᚗcomᚋCᚑ4KEᚋsimpleᚑpostsᚑserviceᚋgraphᚋmodelᚐCommentsConnection(ctx context.Context, sel ast.SelectionSet, v *model.CommentsConnection) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._CommentsConnection(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNInt642int64(ctx context.Context, v any) (int64, error) {

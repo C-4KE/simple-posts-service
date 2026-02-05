@@ -9,10 +9,10 @@ type Post {
   text: String!
   createDate: Time!
   commentsEnabled: Boolean!
-  commentsConnection (first: Int, after: String): CommentConnection!
+  commentsConnection (first: Int, after: String): CommentsConnection!
 }
 
-type CommentConnection {
+type CommentsConnection {
   edges: [CommentEdge!]!
   pageInfo: PageInfo!
 }
@@ -34,7 +34,7 @@ type Comment {
   parentID: Int64
   text: String!
   createDate: Time!
-  repliesConnection (first: Int, after: String): CommentConnection!
+  repliesConnection (first: Int, after: String): CommentsConnection!
 }
 
 type Query {

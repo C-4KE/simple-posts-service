@@ -9,18 +9,13 @@ import (
 )
 
 type Comment struct {
-	ID                int64              `json:"id"`
-	AuthorID          uuid.UUID          `json:"authorID"`
-	PostID            int64              `json:"postID"`
-	ParentID          *int64             `json:"parentID,omitempty"`
-	Text              string             `json:"text"`
-	CreateDate        time.Time          `json:"createDate"`
-	RepliesConnection *CommentConnection `json:"repliesConnection"`
-}
-
-type CommentConnection struct {
-	Edges    []*CommentEdge `json:"edges"`
-	PageInfo *PageInfo      `json:"pageInfo"`
+	ID                int64               `json:"id"`
+	AuthorID          uuid.UUID           `json:"authorID"`
+	PostID            int64               `json:"postID"`
+	ParentID          *int64              `json:"parentID,omitempty"`
+	Text              string              `json:"text"`
+	CreateDate        time.Time           `json:"createDate"`
+	RepliesConnection *CommentsConnection `json:"repliesConnection"`
 }
 
 type CommentEdge struct {
@@ -35,6 +30,11 @@ type CommentInput struct {
 	Text     string    `json:"text"`
 }
 
+type CommentsConnection struct {
+	Edges    []*CommentEdge `json:"edges"`
+	PageInfo *PageInfo      `json:"pageInfo"`
+}
+
 type Mutation struct {
 }
 
@@ -44,13 +44,13 @@ type PageInfo struct {
 }
 
 type Post struct {
-	ID                 int64              `json:"id"`
-	AuthorID           uuid.UUID          `json:"authorID"`
-	Title              string             `json:"title"`
-	Text               string             `json:"text"`
-	CreateDate         time.Time          `json:"createDate"`
-	CommentsEnabled    bool               `json:"commentsEnabled"`
-	CommentsConnection *CommentConnection `json:"commentsConnection"`
+	ID                 int64               `json:"id"`
+	AuthorID           uuid.UUID           `json:"authorID"`
+	Title              string              `json:"title"`
+	Text               string              `json:"text"`
+	CreateDate         time.Time           `json:"createDate"`
+	CommentsEnabled    bool                `json:"commentsEnabled"`
+	CommentsConnection *CommentsConnection `json:"commentsConnection"`
 }
 
 type PostInput struct {
