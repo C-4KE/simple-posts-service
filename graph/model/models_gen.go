@@ -9,13 +9,13 @@ import (
 )
 
 type Comment struct {
-	ID                int64               `json:"id"`
-	AuthorID          uuid.UUID           `json:"authorID"`
-	PostID            int64               `json:"postID"`
-	ParentID          *int64              `json:"parentID,omitempty"`
-	Text              string              `json:"text"`
-	CreateDate        time.Time           `json:"createDate"`
-	RepliesConnection *CommentsConnection `json:"repliesConnection"`
+	ID         int64               `json:"id"`
+	AuthorID   uuid.UUID           `json:"authorID"`
+	PostID     int64               `json:"postID"`
+	ParentID   *int64              `json:"parentID,omitempty"`
+	Text       string              `json:"text"`
+	CreateDate time.Time           `json:"createDate"`
+	Replies    *CommentsConnection `json:"replies"`
 }
 
 type CommentEdge struct {
@@ -44,13 +44,13 @@ type PageInfo struct {
 }
 
 type Post struct {
-	ID                 int64               `json:"id"`
-	AuthorID           uuid.UUID           `json:"authorID"`
-	Title              string              `json:"title"`
-	Text               string              `json:"text"`
-	CreateDate         time.Time           `json:"createDate"`
-	CommentsEnabled    bool                `json:"commentsEnabled"`
-	CommentsConnection *CommentsConnection `json:"commentsConnection"`
+	ID              int64               `json:"id"`
+	AuthorID        uuid.UUID           `json:"authorID"`
+	Title           string              `json:"title"`
+	Text            string              `json:"text"`
+	CreateDate      time.Time           `json:"createDate"`
+	CommentsEnabled bool                `json:"commentsEnabled"`
+	Comments        *CommentsConnection `json:"comments"`
 }
 
 type PostInput struct {
@@ -61,7 +61,4 @@ type PostInput struct {
 }
 
 type Query struct {
-}
-
-type Subscription struct {
 }

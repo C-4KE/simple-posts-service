@@ -13,6 +13,11 @@ import (
 	"github.com/google/uuid"
 )
 
+// Replies is the resolver for the replies field.
+func (r *commentResolver) Replies(ctx context.Context, obj *model.Comment, first *int32, after *string) (*model.CommentsConnection, error) {
+	panic(fmt.Errorf("not implemented: Replies - replies"))
+}
+
 // AddPost is the resolver for the addPost field.
 func (r *mutationResolver) AddPost(ctx context.Context, newPost model.PostInput) (*model.Post, error) {
 	panic(fmt.Errorf("not implemented: AddPost - addPost"))
@@ -28,6 +33,11 @@ func (r *mutationResolver) UpdateCommentsEnabled(ctx context.Context, postID int
 	panic(fmt.Errorf("not implemented: UpdateCommentsEnabled - updateCommentsEnabled"))
 }
 
+// Comments is the resolver for the comments field.
+func (r *postResolver) Comments(ctx context.Context, obj *model.Post, first *int32, after *string) (*model.CommentsConnection, error) {
+	panic(fmt.Errorf("not implemented: Comments - comments"))
+}
+
 // Posts is the resolver for the posts field.
 func (r *queryResolver) Posts(ctx context.Context) ([]*model.Post, error) {
 	panic(fmt.Errorf("not implemented: Posts - posts"))
@@ -38,20 +48,19 @@ func (r *queryResolver) Post(ctx context.Context, postID int64) (*model.Post, er
 	panic(fmt.Errorf("not implemented: Post - post"))
 }
 
-// CommentAdded is the resolver for the commentAdded field.
-func (r *subscriptionResolver) CommentAdded(ctx context.Context, postID int64) (<-chan *model.Comment, error) {
-	panic(fmt.Errorf("not implemented: CommentAdded - commentAdded"))
-}
+// Comment returns CommentResolver implementation.
+func (r *Resolver) Comment() CommentResolver { return &commentResolver{r} }
 
 // Mutation returns MutationResolver implementation.
 func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
 
+// Post returns PostResolver implementation.
+func (r *Resolver) Post() PostResolver { return &postResolver{r} }
+
 // Query returns QueryResolver implementation.
 func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 
-// Subscription returns SubscriptionResolver implementation.
-func (r *Resolver) Subscription() SubscriptionResolver { return &subscriptionResolver{r} }
-
+type commentResolver struct{ *Resolver }
 type mutationResolver struct{ *Resolver }
+type postResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
-type subscriptionResolver struct{ *Resolver }
