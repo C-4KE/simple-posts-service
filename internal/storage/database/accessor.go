@@ -329,3 +329,7 @@ func (databaseAccessor *DatabaseAccessor) GetCommentsLevel(ctx context.Context, 
 
 	return comments, nil
 }
+
+func (databaseAccessor *DatabaseAccessor) CloseStorage() {
+	databaseAccessor.storage.Close()
+}

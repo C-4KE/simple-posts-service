@@ -216,3 +216,7 @@ func (inMemoryAccessor *InMemoryAccessor) GetCommentsLevel(ctx context.Context, 
 
 	return comments, nil
 }
+
+func (inMemoryAccessor *InMemoryAccessor) CloseStorage() {
+
+}

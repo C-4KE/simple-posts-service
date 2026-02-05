@@ -17,7 +17,9 @@ import (
 
 const defaultPort = "8080"
 
-func PostsServer(storageAccessor *storage.Accessor) {
+func PostsServer(storageAccessor storage.Accessor) {
+	defer storageAccessor.CloseStorage()
+
 	port := os.Getenv("SERVER_PORT")
 	if port == "" {
 		log.Printf("%s in config is not set. %s will be used.", "SERVER_PORT", defaultPort)
@@ -37,9 +39,9 @@ func PostsServer(storageAccessor *storage.Accessor) {
 		Cache: lru.New[string](100),
 	})
 
-	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
+	http.Handle("/", playground.Handler("Simple posts", "/query"))
 	http.Handle("/query", srv)
 
-	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
+	log.Printf("connect to http://localhost:%s/ for Simple posts", port)
 	log.Fatal(http.ListenAndServe(":"+port, nil))
 }
