@@ -20,17 +20,17 @@ func (r *commentResolver) Replies(ctx context.Context, obj *model.Comment, first
 
 // AddPost is the resolver for the addPost field.
 func (r *mutationResolver) AddPost(ctx context.Context, newPost model.PostInput) (*model.Post, error) {
-	panic(fmt.Errorf("not implemented: AddPost - addPost"))
+	return r.storageAccessor.AddPost(ctx, &newPost)
 }
 
 // AddComment is the resolver for the addComment field.
 func (r *mutationResolver) AddComment(ctx context.Context, newComment model.CommentInput) (*model.Comment, error) {
-	panic(fmt.Errorf("not implemented: AddComment - addComment"))
+	return r.storageAccessor.AddComment(ctx, &newComment)
 }
 
 // UpdateCommentsEnabled is the resolver for the updateCommentsEnabled field.
 func (r *mutationResolver) UpdateCommentsEnabled(ctx context.Context, postID int64, authorID uuid.UUID, newCommentsEnabled bool) (*model.Post, error) {
-	panic(fmt.Errorf("not implemented: UpdateCommentsEnabled - updateCommentsEnabled"))
+	return r.storageAccessor.UpdateCommentsEnabled(ctx, postID, authorID, newCommentsEnabled)
 }
 
 // Comments is the resolver for the comments field.
@@ -40,12 +40,12 @@ func (r *postResolver) Comments(ctx context.Context, obj *model.Post, first *int
 
 // Posts is the resolver for the posts field.
 func (r *queryResolver) Posts(ctx context.Context) ([]*model.Post, error) {
-	panic(fmt.Errorf("not implemented: Posts - posts"))
+	return r.storageAccessor.GetAllPosts(ctx)
 }
 
 // Post is the resolver for the post field.
 func (r *queryResolver) Post(ctx context.Context, postID int64) (*model.Post, error) {
-	panic(fmt.Errorf("not implemented: Post - post"))
+	return r.storageAccessor.GetPost(ctx, postID)
 }
 
 // Comment returns CommentResolver implementation.
