@@ -41,7 +41,7 @@ func main() {
 		log.Fatalf("Error while initializing storage: %s", err)
 	}
 
-	server.PostsServer(&storageAccessor)
+	server.PostsServer(storageAccessor)
 }
 
 func createStorageAccessor(storageType string) (storage.Accessor, error) {
