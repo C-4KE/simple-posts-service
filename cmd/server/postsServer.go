@@ -17,13 +17,12 @@ import (
 
 const defaultPort = "8080"
 
-func PostsServer() {
-	port := os.Getenv("PORT")
+func PostsServer(storageAccessor *storage.Accessor) {
+	port := os.Getenv("SERVER_PORT")
 	if port == "" {
+		log.Printf("%s in config is not set. %s will be used.", "SERVER_PORT", defaultPort)
 		port = defaultPort
 	}
-
-	var storageAccessor *storage.Accessor // TODO : Написать инициализацию хранилища
 
 	srv := handler.New(graph.NewExecutableSchema(graph.Config{Resolvers: graph.NewResolver(storageAccessor)}))
 
