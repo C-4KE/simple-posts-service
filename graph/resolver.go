@@ -8,10 +8,10 @@ import "github.com/C-4KE/simple-posts-service/internal/storage"
 // here.
 
 type Resolver struct {
-	storageAccessor *storage.Accessor
+	storageAccessor storage.Accessor
 }
 
-func NewResolver(accessor *storage.Accessor) *Resolver {
+func NewResolver(accessor storage.Accessor) *Resolver {
 	return &Resolver{
 		storageAccessor: accessor,
 	}
