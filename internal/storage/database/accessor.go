@@ -272,9 +272,6 @@ func (databaseAccessor *DatabaseAccessor) GetCommentPath(ctx context.Context, po
 	case nil:
 		path = strings.Join([]string{parentPath, strconv.FormatInt(*parentID, 10)}, ".")
 	default:
-	}
-
-	if err != nil {
 		return "", err
 	}
 
