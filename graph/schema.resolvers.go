@@ -84,6 +84,13 @@ func getCommentsConnection(ctx context.Context, comments []*model.Comment, comme
 		start = true
 	}
 
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+
+	default:
+	}
+
 	hasNextPage := false
 	counter := int32(0)
 	for idx, comment := range comments {
