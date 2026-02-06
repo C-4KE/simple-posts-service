@@ -143,7 +143,7 @@ func (inMemoryAccessor *InMemoryAccessor) AddComment(ctx context.Context, newCom
 
 	_, ok = inMemoryAccessor.storage.commentsByPath.Get(newCommentPath)
 	if !ok {
-		inMemoryAccessor.storage.commentsByPath.Set(newCommentPath, make([]int64, 5))
+		inMemoryAccessor.storage.commentsByPath.Set(newCommentPath, make([]int64, 0))
 	}
 
 	commentsByPath, _ := inMemoryAccessor.storage.commentsByPath.Get(newCommentPath)

@@ -85,7 +85,7 @@ func (databaseAccessor *DatabaseAccessor) GetPost(ctx context.Context, postID in
 }
 
 func (databaseAccessor *DatabaseAccessor) GetAllPosts(ctx context.Context) ([]*model.Post, error) {
-	posts := make([]*model.Post, 10)
+	posts := make([]*model.Post, 0)
 
 	select {
 	case <-ctx.Done():
@@ -300,7 +300,7 @@ func (databaseAccessor *DatabaseAccessor) GetCommentsLevel(ctx context.Context, 
 	default:
 	}
 
-	comments := make([]*model.Comment, 10)
+	comments := make([]*model.Comment, 0)
 
 	querySelectComments := `SELECT comment_id, author_id, post_id, parent_id, text, create_date
 							FROM comments
