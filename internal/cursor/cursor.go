@@ -42,18 +42,23 @@ func GetPath(cursor string) (string, error) {
 	return cursorString[:lastDotIndex], nil
 }
 
-func GetCommentID(cursor string) (string, error) {
+func GetCommentID(cursor string) (int64, error) {
 	cursorString, err := decodeCursor(cursor)
 	if err != nil {
-		return "", err
+		return -1, err
 	}
 
 	lastDotIndex := strings.LastIndex(cursorString, ".")
 	if lastDotIndex == -1 {
-		return "", errors.New("Cursor " + cursor + " is not valid.")
+		return -1, errors.New("Cursor " + cursor + " is not valid.")
 	}
 
-	return cursorString[lastDotIndex:], nil
+	commentID, err := strconv.ParseInt(cursorString[lastDotIndex:], 10, 64)
+	if err != nil {
+		return -1, errors.New("Error while getting commentID from cursor: " + err.Error())
+	}
+
+	return commentID, nil
 }
 
 func encodeCursor(cursorString string) string {

@@ -75,7 +75,8 @@ func getCommentsConnection(ctx context.Context, comments []*model.Comment, comme
 	var startID int64
 	start := false
 	if after != nil {
-		startID, err := cursor.GetCommentID(*after)
+		var err error
+		startID, err = cursor.GetCommentID(*after)
 		if err != nil {
 			return nil, err
 		}
