@@ -372,74 +372,165 @@ func TestAddPost(t *testing.T) {
 		}, createdComment)
 	})
 
-	// t.Run("Successful Get Root Comment Path", func(t *testing.T) {
-	// 	commentPath, err := mockAccessor.GetCommentPath(ctx, 1, nil)
+	t.Run("Successful Get Root Comment Path", func(t *testing.T) {
+		mockAccessor, mock := getMockAccessor(t)
+		defer mockAccessor.CloseStorage()
 
-	// 	assertions.Nil(err)
-	// 	assertions.Equal("1", commentPath)
-	// })
+		mock.ExpectQuery(`SELECT post_id
+						FROM posts
+						WHERE post_id = \$1`).
+			WithArgs(int64(1)).
+			WillReturnRows(sqlmock.NewRows([]string{"post_id"}).AddRow(int64(1)))
 
-	// t.Run("Successful Get Child Comment Path", func(t *testing.T) {
-	// 	parentID := int64(0)
-	// 	commentPath, err := mockAccessor.GetCommentPath(ctx, 1, &parentID)
+		mock.ExpectQuery(`SELECT path
+							FROM comments
+							WHERE comment_id = \$1`).
+			WithArgs(nil).
+			WillReturnError(sql.ErrNoRows)
 
-	// 	assertions.Nil(err)
-	// 	assertions.Equal("1.0", commentPath)
-	// })
+		commentPath, err := mockAccessor.GetCommentPath(ctx, 1, nil)
 
-	// t.Run("Unsuccessful Get Comment Path Post Does Not Exist", func(t *testing.T) {
-	// 	commentPath, err := mockAccessor.GetCommentPath(ctx, -1, nil)
+		assertions.Nil(err)
+		assertions.Equal("1", commentPath)
+	})
 
-	// 	assertions.NotNil(err)
-	// 	assertions.Equal("", commentPath)
-	// })
+	t.Run("Successful Get Child Comment Path", func(t *testing.T) {
+		mockAccessor, mock := getMockAccessor(t)
+		defer mockAccessor.CloseStorage()
 
-	// t.Run("Unsuccessful Get Comment Path Parent Comment Does Not Exist", func(t *testing.T) {
-	// 	parentID := int64(123)
-	// 	commentPath, err := mockAccessor.GetCommentPath(ctx, 1, &parentID)
+		parentID := int64(0)
 
-	// 	assertions.NotNil(err)
-	// 	assertions.Equal("", commentPath)
-	// })
+		mock.ExpectQuery(`SELECT post_id
+						FROM posts
+						WHERE post_id = \$1`).
+			WithArgs(int64(1)).
+			WillReturnRows(sqlmock.NewRows([]string{"post_id"}).AddRow(int64(1)))
 
-	// t.Run("Successful Get Root Comments", func(t *testing.T) {
-	// 	comments, err := mockAccessor.GetCommentsLevel(ctx, 1, "1")
+		mock.ExpectQuery(`SELECT path
+							FROM comments
+							WHERE comment_id = \$1`).
+			WithArgs(parentID).
+			WillReturnRows(sqlmock.NewRows([]string{"path"}).AddRow("1"))
 
-	// 	assertions.Nil(err)
-	// 	assertions.Equal([]*model.Comment{
-	// 		{
-	// 			ID:         0,
-	// 			AuthorID:   authorID,
-	// 			PostID:     1,
-	// 			ParentID:   nil,
-	// 			Text:       "Test Text",
-	// 			CreateDate: comments[0].CreateDate,
-	// 		},
-	// 		{
-	// 			ID:         1,
-	// 			AuthorID:   authorID,
-	// 			PostID:     1,
-	// 			ParentID:   nil,
-	// 			Text:       "Test Text",
-	// 			CreateDate: comments[1].CreateDate,
-	// 		},
-	// 	}, comments)
-	// })
+		commentPath, err := mockAccessor.GetCommentPath(ctx, 1, &parentID)
 
-	// t.Run("Successful Get Child Comments", func(t *testing.T) {
-	// 	comments, err := mockAccessor.GetCommentsLevel(ctx, 1, "1.0")
+		assertions.Nil(err)
+		assertions.Equal("1.0", commentPath)
+	})
 
-	// 	parentID := int64(0)
-	// 	assertions.Nil(err)
-	// 	assertions.Equal([]*model.Comment{
-	// 		{
-	// 			ID:         2,
-	// 			AuthorID:   authorID,
-	// 			PostID:     1,
-	// 			ParentID:   &parentID,
-	// 			Text:       "Test Text",
-	// 			CreateDate: comments[0].CreateDate,
-	// 		},
-	// 	}, comments)
-	// })
+	t.Run("Unsuccessful Get Comment Path Post Does Not Exist", func(t *testing.T) {
+		mockAccessor, mock := getMockAccessor(t)
+		defer mockAccessor.CloseStorage()
+
+		mock.ExpectQuery(`SELECT post_id
+						FROM posts
+						WHERE post_id = \$1`).
+			WithArgs(int64(-1)).
+			WillReturnError(sql.ErrNoRows)
+
+		commentPath, err := mockAccessor.GetCommentPath(ctx, -1, nil)
+
+		assertions.NotNil(err)
+		assertions.Equal("", commentPath)
+	})
+
+	t.Run("Unsuccessful Get Comment Path Parent Comment Does Not Exist", func(t *testing.T) {
+		mockAccessor, mock := getMockAccessor(t)
+		defer mockAccessor.CloseStorage()
+
+		parentID := int64(123)
+		mock.ExpectQuery(`SELECT post_id
+						FROM posts
+						WHERE post_id = \$1`).
+			WithArgs(int64(1)).
+			WillReturnRows(sqlmock.NewRows([]string{"post_id"}).AddRow(int64(1)))
+
+		mock.ExpectQuery(`SELECT path
+							FROM comments
+							WHERE comment_id = \$1`).
+			WithArgs(parentID).
+			WillReturnError(sql.ErrNoRows)
+
+		commentPath, err := mockAccessor.GetCommentPath(ctx, 1, &parentID)
+
+		assertions.NotNil(err)
+		assertions.Equal("", commentPath)
+	})
+
+	t.Run("Successful Get Root Comments", func(t *testing.T) {
+		mockAccessor, mock := getMockAccessor(t)
+		defer mockAccessor.CloseStorage()
+
+		mock.ExpectQuery(`SELECT post_id
+						FROM posts
+						WHERE post_id = \$1`).
+			WithArgs(int64(1)).
+			WillReturnRows(sqlmock.NewRows([]string{"post_id"}).AddRow(int64(1)))
+
+		mock.ExpectQuery(`SELECT comment_id, author_id, post_id, parent_id, text, create_date
+							FROM comments
+							WHERE path = \$1`).
+			WithArgs("1").
+			WillReturnRows(sqlmock.
+				NewRows([]string{"comment_id", "author_id", "post_id", "parent_id", "text", "create_date"}).
+				AddRow(int64(0), authorID, int64(1), nil, "Test Text", time.Now()).
+				AddRow(int64(1), authorID, int64(1), nil, "Test Text", time.Now()))
+
+		comments, err := mockAccessor.GetCommentsLevel(ctx, 1, "1")
+
+		assertions.Nil(err)
+		assertions.Equal([]*model.Comment{
+			{
+				ID:         0,
+				AuthorID:   authorID,
+				PostID:     1,
+				ParentID:   nil,
+				Text:       "Test Text",
+				CreateDate: comments[0].CreateDate,
+			},
+			{
+				ID:         1,
+				AuthorID:   authorID,
+				PostID:     1,
+				ParentID:   nil,
+				Text:       "Test Text",
+				CreateDate: comments[1].CreateDate,
+			},
+		}, comments)
+	})
+
+	t.Run("Successful Get Child Comments", func(t *testing.T) {
+		mockAccessor, mock := getMockAccessor(t)
+		defer mockAccessor.CloseStorage()
+
+		parentID := int64(0)
+
+		mock.ExpectQuery(`SELECT post_id
+						FROM posts
+						WHERE post_id = \$1`).
+			WithArgs(int64(1)).
+			WillReturnRows(sqlmock.NewRows([]string{"post_id"}).AddRow(int64(1)))
+
+		mock.ExpectQuery(`SELECT comment_id, author_id, post_id, parent_id, text, create_date
+							FROM comments
+							WHERE path = \$1`).
+			WithArgs("1.0").
+			WillReturnRows(sqlmock.
+				NewRows([]string{"comment_id", "author_id", "post_id", "parent_id", "text", "create_date"}).
+				AddRow(int64(2), authorID, int64(1), &parentID, "Test Text", time.Now()))
+
+		comments, err := mockAccessor.GetCommentsLevel(ctx, 1, "1.0")
+
+		assertions.Nil(err)
+		assertions.Equal([]*model.Comment{
+			{
+				ID:         2,
+				AuthorID:   authorID,
+				PostID:     1,
+				ParentID:   &parentID,
+				Text:       "Test Text",
+				CreateDate: comments[0].CreateDate,
+			},
+		}, comments)
+	})
 }
