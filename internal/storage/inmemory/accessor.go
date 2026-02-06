@@ -132,9 +132,6 @@ func (inMemoryAccessor *InMemoryAccessor) AddComment(ctx context.Context, newCom
 	default:
 	}
 
-	inMemoryAccessor.lastCommentID++
-	comment.ID = inMemoryAccessor.lastCommentID
-
 	newCommentPath, err := inMemoryAccessor.GetCommentPath(ctx, newComment.PostID, newComment.ParentID)
 
 	if err != nil {
@@ -147,6 +144,9 @@ func (inMemoryAccessor *InMemoryAccessor) AddComment(ctx context.Context, newCom
 	}
 
 	commentsByPath, _ := inMemoryAccessor.storage.commentsByPath.Get(newCommentPath)
+
+	inMemoryAccessor.lastCommentID++
+	comment.ID = inMemoryAccessor.lastCommentID
 
 	inMemoryAccessor.storage.commentsByPath.Set(newCommentPath, append(commentsByPath, comment.ID))
 	inMemoryAccessor.storage.commentPaths.Set(comment.ID, newCommentPath)
