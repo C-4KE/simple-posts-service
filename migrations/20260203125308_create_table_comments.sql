@@ -1,6 +1,6 @@
 -- +goose Up
 -- +goose StatementBegin
-CREATE EXTENSION IF NOT EXIST ltree;
+CREATE EXTENSION IF NOT EXISTS ltree;
 
 CREATE TABLE IF NOT EXISTS Comments (
     comment_id BIGSERIAL PRIMARY KEY,
