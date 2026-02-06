@@ -109,7 +109,7 @@ func TestAddPost(t *testing.T) {
 		posts, err := mockAccessor.GetAllPosts(ctx)
 		assertions.Nil(err)
 		assertions.Equal([]*model.Post{
-			&model.Post{
+			{
 				ID:              0,
 				AuthorID:        authorID,
 				Title:           "Test Title",
@@ -117,7 +117,7 @@ func TestAddPost(t *testing.T) {
 				CommentsEnabled: false,
 				CreateDate:      posts[0].CreateDate,
 			},
-			&model.Post{
+			{
 				ID:              1,
 				AuthorID:        authorID,
 				Title:           "Test Title",
@@ -187,5 +187,119 @@ func TestAddPost(t *testing.T) {
 		createdComment, err := mockAccessor.AddComment(ctx, newComment)
 		assertions.NotNil(err)
 		assertions.Nil(createdComment)
+	})
+
+	t.Run("Successful Add Another Comment", func(t *testing.T) {
+		newComment := &model.CommentInput{
+			AuthorID: authorID,
+			PostID:   1,
+			Text:     "Test Text",
+			ParentID: nil,
+		}
+
+		createdComment, err := mockAccessor.AddComment(ctx, newComment)
+		assertions.Nil(err)
+		assertions.NotNil(createdComment)
+		assertions.Equal(&model.Comment{
+			ID:         1,
+			AuthorID:   newComment.AuthorID,
+			PostID:     newComment.PostID,
+			ParentID:   nil,
+			Text:       newComment.Text,
+			CreateDate: createdComment.CreateDate,
+		}, createdComment)
+	})
+
+	t.Run("Successful Add Child Comment", func(t *testing.T) {
+		parentID := int64(0)
+		newComment := &model.CommentInput{
+			AuthorID: authorID,
+			PostID:   1,
+			Text:     "Test Text",
+			ParentID: &parentID,
+		}
+
+		createdComment, err := mockAccessor.AddComment(ctx, newComment)
+		assertions.Nil(err)
+		assertions.NotNil(createdComment)
+		assertions.Equal(&model.Comment{
+			ID:         2,
+			AuthorID:   newComment.AuthorID,
+			PostID:     newComment.PostID,
+			ParentID:   &parentID,
+			Text:       newComment.Text,
+			CreateDate: createdComment.CreateDate,
+		}, createdComment)
+	})
+
+	t.Run("Successful Get Root Comment Path", func(t *testing.T) {
+		commentPath, err := mockAccessor.GetCommentPath(ctx, 1, nil)
+
+		assertions.Nil(err)
+		assertions.Equal("1", commentPath)
+	})
+
+	t.Run("Successful Get Child Comment Path", func(t *testing.T) {
+		parentID := int64(0)
+		commentPath, err := mockAccessor.GetCommentPath(ctx, 1, &parentID)
+
+		assertions.Nil(err)
+		assertions.Equal("1.0", commentPath)
+	})
+
+	t.Run("Unsuccessful Get Comment Path Post Does Not Exist", func(t *testing.T) {
+		commentPath, err := mockAccessor.GetCommentPath(ctx, -1, nil)
+
+		assertions.NotNil(err)
+		assertions.Equal("", commentPath)
+	})
+
+	t.Run("Unsuccessful Get Comment Path Parent Comment Does Not Exist", func(t *testing.T) {
+		parentID := int64(123)
+		commentPath, err := mockAccessor.GetCommentPath(ctx, 1, &parentID)
+
+		assertions.NotNil(err)
+		assertions.Equal("", commentPath)
+	})
+
+	t.Run("Successful Get Root Comments", func(t *testing.T) {
+		comments, err := mockAccessor.GetCommentsLevel(ctx, 1, "1")
+
+		assertions.Nil(err)
+		assertions.Equal([]*model.Comment{
+			{
+				ID:         0,
+				AuthorID:   authorID,
+				PostID:     1,
+				ParentID:   nil,
+				Text:       "Test Text",
+				CreateDate: comments[0].CreateDate,
+			},
+			{
+				ID:         1,
+				AuthorID:   authorID,
+				PostID:     1,
+				ParentID:   nil,
+				Text:       "Test Text",
+				CreateDate: comments[1].CreateDate,
+			},
+		}, comments)
+	})
+
+	t.Run("Successful Get Child Comments", func(t *testing.T) {
+		comments, err := mockAccessor.GetCommentsLevel(ctx, 1, "1.0")
+
+		parentID := int64(0)
+		assertions.Nil(err)
+		assertions.Equal([]*model.Comment{
+			{
+				ID:         2,
+				AuthorID:   authorID,
+				PostID:     1,
+				ParentID:   &parentID,
+				Text:       "Test Text",
+				CreateDate: comments[0].CreateDate,
+			},
+		}, comments)
 	})
 }
