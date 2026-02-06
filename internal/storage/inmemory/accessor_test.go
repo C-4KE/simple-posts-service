@@ -29,14 +29,14 @@ func TestAddPost(t *testing.T) {
 		createdPost, err := mockAccessor.AddPost(ctx, newPost)
 		assertions.Nil(err)
 		assertions.NotNil(createdPost)
-		assertions.Equal(createdPost, &model.Post{
+		assertions.Equal(&model.Post{
 			ID:              0,
 			AuthorID:        newPost.AuthorID,
 			Title:           newPost.Title,
 			Text:            newPost.Text,
 			CommentsEnabled: newPost.CommentsEnabled,
 			CreateDate:      createdPost.CreateDate,
-		})
+		}, createdPost)
 	})
 
 	t.Run("Successful Update CommentsEnabled", func(t *testing.T) {
@@ -68,14 +68,14 @@ func TestAddPost(t *testing.T) {
 
 		post, err := mockAccessor.GetPost(ctx, 0)
 		assertions.Nil(err)
-		assertions.Equal(post, &model.Post{
+		assertions.Equal(&model.Post{
 			ID:              0,
 			AuthorID:        existingPost.AuthorID,
 			Title:           existingPost.Title,
 			Text:            existingPost.Text,
 			CommentsEnabled: existingPost.CommentsEnabled,
 			CreateDate:      post.CreateDate,
-		})
+		}, post)
 	})
 
 	t.Run("Unsuccessful Get Post Incorrect PostID", func(t *testing.T) {
@@ -95,20 +95,20 @@ func TestAddPost(t *testing.T) {
 		createdPost, err := mockAccessor.AddPost(ctx, newPost)
 		assertions.Nil(err)
 		assertions.NotNil(createdPost)
-		assertions.Equal(createdPost, &model.Post{
-			ID:              0,
+		assertions.Equal(&model.Post{
+			ID:              1,
 			AuthorID:        newPost.AuthorID,
 			Title:           newPost.Title,
 			Text:            newPost.Text,
 			CommentsEnabled: newPost.CommentsEnabled,
 			CreateDate:      createdPost.CreateDate,
-		})
+		}, createdPost)
 	})
 
 	t.Run("Successful Get All Posts", func(t *testing.T) {
 		posts, err := mockAccessor.GetAllPosts(ctx)
 		assertions.Nil(err)
-		assertions.Equal(posts, []*model.Post{
+		assertions.Equal([]*model.Post{
 			&model.Post{
 				ID:              0,
 				AuthorID:        authorID,
@@ -125,6 +125,8 @@ func TestAddPost(t *testing.T) {
 				CommentsEnabled: true,
 				CreateDate:      posts[1].CreateDate,
 			},
-		})
+		}, posts)
+	})
+
 	})
 }
