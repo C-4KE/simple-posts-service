@@ -15,7 +15,7 @@ services:
       retries: 5
       start_period: 10s
     volumes:
-      - db_data: /var/lib/postgresql
+      - db_data:/var/lib/postgresql
     networks:
       - posts_network
     env_file:
@@ -30,12 +30,12 @@ services:
     depends_on:
       db:
         condition: service_healthy
-      volumes:
-        - ./migrations:/migrations
-      networks:
-        - posts_network
-      env_file:
-        - .env
+    volumes:
+      - ./migrations:/migrations
+    networks:
+      - posts_network
+    env_file:
+      - .env
 
   app:
     build:
@@ -64,5 +64,5 @@ services:
 volumes:
   db_data:
 networks:
-  posts-network:
+  posts_network:
     driver: bridge
