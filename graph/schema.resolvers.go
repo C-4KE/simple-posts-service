@@ -7,8 +7,9 @@ package graph
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"strconv"
+	"strings"
 
 	"github.com/C-4KE/simple-posts-service/graph/model"
 	"github.com/C-4KE/simple-posts-service/internal/cursor"
@@ -17,7 +18,36 @@ import (
 
 // Replies is the resolver for the replies field.
 func (r *commentResolver) Replies(ctx context.Context, obj *model.Comment, first *int32, after *string) (*model.CommentsConnection, error) {
-	panic(fmt.Errorf("not implemented: Replies - replies"))
+	var commentsPath string
+	parentPath, err := r.storageAccessor.GetCommentPath(ctx, obj.PostID, &obj.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	if after != nil {
+		err := cursor.Validate(*after)
+		if err != nil {
+			return nil, err
+		}
+
+		commentsPath, err = cursor.GetPath(*after)
+		if err != nil {
+			return nil, err
+		}
+
+		if !strings.Contains(commentsPath, parentPath) {
+			return nil, errors.New("Comment with cursor " + *after + "is not a reply to the comment with ID " + strconv.FormatInt(obj.ID, 10) + ".")
+		}
+	} else {
+		commentsPath = parentPath
+	}
+
+	comments, err := r.storageAccessor.GetCommentsLevel(ctx, obj.ID, commentsPath)
+	if err != nil {
+		return nil, err
+	}
+
+	return getCommentsConnection(ctx, comments, commentsPath, first, after)
 }
 
 // AddPost is the resolver for the addPost field.
