@@ -100,7 +100,7 @@ func (r *postResolver) Comments(ctx context.Context, obj *model.Post, first *int
 }
 
 func getCommentsConnection(ctx context.Context, comments []*model.Comment, commentsPath string, first *int32, after *string) (*model.CommentsConnection, error) {
-	edges := make([]*model.CommentEdge, len(comments))
+	edges := make([]*model.CommentEdge, 0)
 
 	var startID int64
 	start := false
@@ -121,6 +121,11 @@ func getCommentsConnection(ctx context.Context, comments []*model.Comment, comme
 	default:
 	}
 
+	var commentsAmount = int32(len(comments))
+	if first != nil {
+		commentsAmount = *first
+	}
+
 	hasNextPage := false
 	counter := int32(0)
 	for idx, comment := range comments {
@@ -137,7 +142,7 @@ func getCommentsConnection(ctx context.Context, comments []*model.Comment, comme
 			counter++
 		}
 
-		if counter == *first {
+		if counter == commentsAmount {
 			if idx+1 < len(comments) {
 				hasNextPage = true
 			}
