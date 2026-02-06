@@ -8,8 +8,10 @@ package graph
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/C-4KE/simple-posts-service/graph/model"
+	"github.com/C-4KE/simple-posts-service/internal/cursor"
 	"github.com/google/uuid"
 )
 
@@ -35,7 +37,87 @@ func (r *mutationResolver) UpdateCommentsEnabled(ctx context.Context, postID int
 
 // Comments is the resolver for the comments field.
 func (r *postResolver) Comments(ctx context.Context, obj *model.Post, first *int32, after *string) (*model.CommentsConnection, error) {
-	panic(fmt.Errorf("not implemented: Comments - comments"))
+	if !obj.CommentsEnabled {
+		obj.Comments = &model.CommentsConnection{
+			Edges:    []*model.CommentEdge{},
+			PageInfo: &model.PageInfo{HasNextPage: false},
+		}
+
+		return obj.Comments, nil
+	}
+
+	var commentsPath string
+	if after != nil {
+		err := cursor.Validate(*after)
+		if err != nil {
+			return nil, err
+		}
+
+		commentsPath, err = cursor.GetPath(*after)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		commentsPath = strconv.FormatInt(obj.ID, 10)
+	}
+
+	comments, err := r.storageAccessor.GetCommentsLevel(ctx, obj.ID, commentsPath)
+	if err != nil {
+		return nil, err
+	}
+
+	return getCommentsConnection(ctx, comments, commentsPath, first, after)
+}
+
+func getCommentsConnection(ctx context.Context, comments []*model.Comment, commentsPath string, first *int32, after *string) (*model.CommentsConnection, error) {
+	edges := make([]*model.CommentEdge, len(comments))
+
+	var startID int64
+	start := false
+	if after != nil {
+		startID, err := cursor.GetCommentID(*after)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		start = true
+	}
+
+	hasNextPage := false
+	counter := int32(0)
+	for idx, comment := range comments {
+		if comment.ID == startID && !start {
+			start = true
+			continue
+		}
+
+		if start {
+			edges = append(edges, &model.CommentEdge{
+				Node:   comment,
+				Cursor: cursor.Create(comment.ID, commentsPath),
+			})
+			counter++
+		}
+
+		if counter == *first {
+			if idx+1 < len(comments) {
+				hasNextPage = true
+			}
+		}
+	}
+
+	var endCursor string
+	if len(edges) > 0 {
+		endCursor = edges[len(edges)-1].Cursor
+	}
+
+	return &model.CommentsConnection{
+		Edges: edges,
+		PageInfo: &model.PageInfo{
+			HasNextPage: hasNextPage,
+			EndCursor:   &endCursor,
+		},
+	}, nil
 }
 
 // Posts is the resolver for the posts field.
