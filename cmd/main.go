@@ -19,12 +19,12 @@ const (
 func main() {
 	storageType := defaultStorageType
 
-	flag.StringVar(&storageType, "storage", "postgress", "Set storage type: 'postgres' ('p') or 'memory' ('m')")
+	flag.StringVar(&storageType, "storage", "postgres", "Set storage type: 'postgres' ('p') or 'memory' ('m')")
 	flag.StringVar(&storageType, "s", "p", "Set storage type: 'postgres' ('p') or 'memory' ('m')")
 	flag.Parse()
 
 	switch storageType {
-	case "postgress":
+	case "postgres":
 	case "memory":
 	case "p":
 		storageType = "postgres"
