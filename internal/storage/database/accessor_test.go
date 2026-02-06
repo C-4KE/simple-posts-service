@@ -20,19 +20,24 @@ func (a AnyTime) Match(v driver.Value) bool {
 	return ok
 }
 
-func TestAddPost(t *testing.T) {
+func getMockAccessor(t *testing.T) (*DatabaseAccessor, sqlmock.Sqlmock) {
 	mockStorage, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatal(err)
 	}
 	mockAccessor := NewDatabaseAccessor(mockStorage)
-	defer mockAccessor.CloseStorage()
+	return mockAccessor, mock
+}
 
+func TestAddPost(t *testing.T) {
 	assertions := assert.New(t)
 	authorID := uuid.New()
 	ctx := context.Background()
 
 	t.Run("Successful Add Post", func(t *testing.T) {
+		mockAccessor, mock := getMockAccessor(t)
+		defer mockAccessor.CloseStorage()
+
 		newPost := &model.PostInput{
 			AuthorID:        authorID,
 			Title:           "Test Title",
