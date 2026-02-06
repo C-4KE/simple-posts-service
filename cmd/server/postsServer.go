@@ -11,18 +11,22 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/C-4KE/simple-posts-service/graph"
+	"github.com/C-4KE/simple-posts-service/internal/storage"
 	"github.com/vektah/gqlparser/v2/ast"
 )
 
 const defaultPort = "8080"
 
-func PostsServer() {
-	port := os.Getenv("PORT")
+func PostsServer(storageAccessor storage.Accessor) {
+	defer storageAccessor.CloseStorage()
+
+	port := os.Getenv("SERVER_PORT")
 	if port == "" {
+		log.Printf("%s in config is not set. %s will be used.", "SERVER_PORT", defaultPort)
 		port = defaultPort
 	}
 
-	srv := handler.New(graph.NewExecutableSchema(graph.Config{Resolvers: &graph.Resolver{}}))
+	srv := handler.New(graph.NewExecutableSchema(graph.Config{Resolvers: graph.NewResolver(storageAccessor)}))
 
 	srv.AddTransport(transport.Options{})
 	srv.AddTransport(transport.GET{})
@@ -35,9 +39,9 @@ func PostsServer() {
 		Cache: lru.New[string](100),
 	})
 
-	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
+	http.Handle("/", playground.Handler("Simple posts", "/query"))
 	http.Handle("/query", srv)
 
-	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
+	log.Printf("connect to http://localhost:%s/ for Simple posts", port)
 	log.Fatal(http.ListenAndServe(":"+port, nil))
 }

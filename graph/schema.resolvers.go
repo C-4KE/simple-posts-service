@@ -7,51 +7,180 @@ package graph
 
 import (
 	"context"
-	"fmt"
+	"errors"
+	"strconv"
+	"strings"
 
 	"github.com/C-4KE/simple-posts-service/graph/model"
+	"github.com/C-4KE/simple-posts-service/internal/cursor"
 	"github.com/google/uuid"
 )
 
+// Replies is the resolver for the replies field.
+func (r *commentResolver) Replies(ctx context.Context, obj *model.Comment, first *int32, after *string) (*model.CommentsConnection, error) {
+	var commentsPath string
+	parentPath, err := r.storageAccessor.GetCommentPath(ctx, obj.PostID, &obj.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	if after != nil {
+		err := cursor.Validate(*after)
+		if err != nil {
+			return nil, err
+		}
+
+		commentsPath, err = cursor.GetPath(*after)
+		if err != nil {
+			return nil, err
+		}
+
+		if !strings.Contains(commentsPath, parentPath) {
+			return nil, errors.New("Comment with cursor " + *after + "is not a reply to the comment with ID " + strconv.FormatInt(obj.ID, 10) + ".")
+		}
+	} else {
+		commentsPath = parentPath
+	}
+
+	comments, err := r.storageAccessor.GetCommentsLevel(ctx, obj.ID, commentsPath)
+	if err != nil {
+		return nil, err
+	}
+
+	return getCommentsConnection(ctx, comments, commentsPath, first, after)
+}
+
 // AddPost is the resolver for the addPost field.
 func (r *mutationResolver) AddPost(ctx context.Context, newPost model.PostInput) (*model.Post, error) {
-	panic(fmt.Errorf("not implemented: AddPost - addPost"))
+	return r.storageAccessor.AddPost(ctx, &newPost)
 }
 
 // AddComment is the resolver for the addComment field.
 func (r *mutationResolver) AddComment(ctx context.Context, newComment model.CommentInput) (*model.Comment, error) {
-	panic(fmt.Errorf("not implemented: AddComment - addComment"))
+	return r.storageAccessor.AddComment(ctx, &newComment)
 }
 
 // UpdateCommentsEnabled is the resolver for the updateCommentsEnabled field.
-func (r *mutationResolver) UpdateCommentsEnabled(ctx context.Context, postID int, authorID uuid.UUID, newCommentsEnabled bool) (*model.Post, error) {
-	panic(fmt.Errorf("not implemented: UpdateCommentsEnabled - updateCommentsEnabled"))
+func (r *mutationResolver) UpdateCommentsEnabled(ctx context.Context, postID int64, authorID uuid.UUID, newCommentsEnabled bool) (*model.Post, error) {
+	return r.storageAccessor.UpdateCommentsEnabled(ctx, postID, authorID, newCommentsEnabled)
+}
+
+// Comments is the resolver for the comments field.
+func (r *postResolver) Comments(ctx context.Context, obj *model.Post, first *int32, after *string) (*model.CommentsConnection, error) {
+	if !obj.CommentsEnabled {
+		obj.Comments = &model.CommentsConnection{
+			Edges:    []*model.CommentEdge{},
+			PageInfo: &model.PageInfo{HasNextPage: false},
+		}
+
+		return obj.Comments, nil
+	}
+
+	var commentsPath string
+	if after != nil {
+		err := cursor.Validate(*after)
+		if err != nil {
+			return nil, err
+		}
+
+		commentsPath, err = cursor.GetPath(*after)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		commentsPath = strconv.FormatInt(obj.ID, 10)
+	}
+
+	comments, err := r.storageAccessor.GetCommentsLevel(ctx, obj.ID, commentsPath)
+	if err != nil {
+		return nil, err
+	}
+
+	return getCommentsConnection(ctx, comments, commentsPath, first, after)
+}
+
+func getCommentsConnection(ctx context.Context, comments []*model.Comment, commentsPath string, first *int32, after *string) (*model.CommentsConnection, error) {
+	edges := make([]*model.CommentEdge, len(comments))
+
+	var startID int64
+	start := false
+	if after != nil {
+		var err error
+		startID, err = cursor.GetCommentID(*after)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		start = true
+	}
+
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+
+	default:
+	}
+
+	hasNextPage := false
+	counter := int32(0)
+	for idx, comment := range comments {
+		if comment.ID == startID && !start {
+			start = true
+			continue
+		}
+
+		if start {
+			edges = append(edges, &model.CommentEdge{
+				Node:   comment,
+				Cursor: cursor.Create(comment.ID, commentsPath),
+			})
+			counter++
+		}
+
+		if counter == *first {
+			if idx+1 < len(comments) {
+				hasNextPage = true
+			}
+		}
+	}
+
+	var endCursor string
+	if len(edges) > 0 {
+		endCursor = edges[len(edges)-1].Cursor
+	}
+
+	return &model.CommentsConnection{
+		Edges: edges,
+		PageInfo: &model.PageInfo{
+			HasNextPage: hasNextPage,
+			EndCursor:   &endCursor,
+		},
+	}, nil
 }
 
 // Posts is the resolver for the posts field.
 func (r *queryResolver) Posts(ctx context.Context) ([]*model.Post, error) {
-	panic(fmt.Errorf("not implemented: Posts - posts"))
+	return r.storageAccessor.GetAllPosts(ctx)
 }
 
 // Post is the resolver for the post field.
-func (r *queryResolver) Post(ctx context.Context, postID int) (*model.Post, error) {
-	panic(fmt.Errorf("not implemented: Post - post"))
+func (r *queryResolver) Post(ctx context.Context, postID int64) (*model.Post, error) {
+	return r.storageAccessor.GetPost(ctx, postID)
 }
 
-// CommentAdded is the resolver for the commentAdded field.
-func (r *subscriptionResolver) CommentAdded(ctx context.Context, postID int) (<-chan *model.Comment, error) {
-	panic(fmt.Errorf("not implemented: CommentAdded - commentAdded"))
-}
+// Comment returns CommentResolver implementation.
+func (r *Resolver) Comment() CommentResolver { return &commentResolver{r} }
 
 // Mutation returns MutationResolver implementation.
 func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
 
+// Post returns PostResolver implementation.
+func (r *Resolver) Post() PostResolver { return &postResolver{r} }
+
 // Query returns QueryResolver implementation.
 func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 
-// Subscription returns SubscriptionResolver implementation.
-func (r *Resolver) Subscription() SubscriptionResolver { return &subscriptionResolver{r} }
-
+type commentResolver struct{ *Resolver }
 type mutationResolver struct{ *Resolver }
+type postResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
-type subscriptionResolver struct{ *Resolver }

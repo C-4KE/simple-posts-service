@@ -16,6 +16,7 @@ require (
 	github.com/goccy/go-yaml v1.19.2 // indirect
 	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
+	github.com/lib/pq v1.11.1 // indirect
 	github.com/sosodev/duration v1.3.1 // indirect
 	github.com/urfave/cli/v3 v3.6.1 // indirect
 	golang.org/x/mod v0.31.0 // indirect
