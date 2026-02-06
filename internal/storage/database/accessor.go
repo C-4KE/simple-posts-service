@@ -268,6 +268,9 @@ func (databaseAccessor *DatabaseAccessor) GetCommentPath(ctx context.Context, po
 	var path string
 	switch err {
 	case sql.ErrNoRows:
+		if parentID != nil {
+			return "", errors.New("Parent comment with ID " + strconv.FormatInt(*parentID, 10) + " was not found")
+		}
 		path = strconv.FormatInt(postID, 10)
 	case nil:
 		path = strings.Join([]string{parentPath, strconv.FormatInt(*parentID, 10)}, ".")
