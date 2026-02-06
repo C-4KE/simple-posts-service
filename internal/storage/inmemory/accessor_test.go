@@ -128,5 +128,64 @@ func TestAddPost(t *testing.T) {
 		}, posts)
 	})
 
+	t.Run("Successful Add Comment", func(t *testing.T) {
+		newComment := &model.CommentInput{
+			AuthorID: authorID,
+			PostID:   1,
+			Text:     "Test Text",
+			ParentID: nil,
+		}
+
+		createdComment, err := mockAccessor.AddComment(ctx, newComment)
+		assertions.Nil(err)
+		assertions.NotNil(createdComment)
+		assertions.Equal(&model.Comment{
+			ID:         0,
+			AuthorID:   newComment.AuthorID,
+			PostID:     newComment.PostID,
+			ParentID:   nil,
+			Text:       newComment.Text,
+			CreateDate: createdComment.CreateDate,
+		}, createdComment)
+	})
+
+	t.Run("Unsuccessful Add Comment Comments Disabled", func(t *testing.T) {
+		newComment := &model.CommentInput{
+			AuthorID: authorID,
+			PostID:   0,
+			Text:     "Test Text",
+			ParentID: nil,
+		}
+
+		createdComment, err := mockAccessor.AddComment(ctx, newComment)
+		assertions.NotNil(err)
+		assertions.Nil(createdComment)
+	})
+
+	t.Run("Unsuccessful Add Comment Post Does Not Exist", func(t *testing.T) {
+		newComment := &model.CommentInput{
+			AuthorID: authorID,
+			PostID:   -1,
+			Text:     "Test Text",
+			ParentID: nil,
+		}
+
+		createdComment, err := mockAccessor.AddComment(ctx, newComment)
+		assertions.NotNil(err)
+		assertions.Nil(createdComment)
+	})
+
+	t.Run("Unsuccessful Add Comment Comments Parent Comment Does Not Exist", func(t *testing.T) {
+		incorrectParentID := int64(123)
+		newComment := &model.CommentInput{
+			AuthorID: authorID,
+			PostID:   1,
+			Text:     "Test Text",
+			ParentID: &incorrectParentID,
+		}
+
+		createdComment, err := mockAccessor.AddComment(ctx, newComment)
+		assertions.NotNil(err)
+		assertions.Nil(createdComment)
 	})
 }
